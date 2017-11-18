@@ -1,4 +1,13 @@
-# Python 3
+""" Ground.py
+
+Usage:
+$ python3 Ground.py /dev/portx [baud rate]
+
+By: Keely Hill
+17 Nov 2017
+
+Copyright (c) 2017 Keely Hill
+"""
 
 import serial
 from serial.tools import list_ports
@@ -10,10 +19,9 @@ from datetime import datetime
 
 from decode import *
 
-
 TELEM_PACKET_SIZE = 63
 
-def start_loop(port='/dev/ttyS1', baud=19200):
+def start_loop(port='/dev/ttyS1', baud=57600):
 
     running = True
     with serial.Serial(port, baud) as ser:
@@ -21,19 +29,29 @@ def start_loop(port='/dev/ttyS1', baud=19200):
         log_file = open('logfile-%s.csv' % date_string, 'w+')
         log_write_count = 0
 
+        csv_header = telem_tuple_builder.replace(' ', ',') + '\n'
+        log_file.write(csv_header)
+
         ser.write(b'***') # tell device we are ready to start
 
         try:
             while running:
-                packet_data = ser.read(TELEM_PACKET_SIZE) # blocks until all bytes collected
+
+                # USE IF preamble is needed to sync devices
+                # buf = ser.read(1) # wait for a begin packet
+                # while buf is not b'***':
+                #     buf.append(ser.read(1))
+                #     if len(buf) > 3:
+                #         buf = buf[-3:]
+
+                # first 2 bytes is signal strength indicator (rssi), include in unpack
+                packet_data = ser.read(2 + TELEM_PACKET_SIZE) # blocks until all bytes collected
                 # may want to save raw data to disk too
 
                 packet = unpack_telem_packet(packet_data)
 
-                # do stuff with packet
-
                 # save to disk into csv
-                as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'
+                as_csv_row = ','.join([str(v) for v in list(packet)+[rssi]]) + '\n'
                 log_file.write(as_csv_row)
 
                 if log_write_count > 20:
@@ -49,7 +67,6 @@ def start_loop(port='/dev/ttyS1', baud=19200):
 
 
 def main(argv):
-
     num_args = len(argv)
 
     if num_args > 0:

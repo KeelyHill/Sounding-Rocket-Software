@@ -3,7 +3,10 @@ from collections import namedtuple
 from struct import unpack
 
 telem_packet_struct_format = "!LdH"
-TelemPacket = namedtuple('TelemPacket', 'timehms pi status_flags')
+
+telem_tuple_builder = 'rssi timehms pi status_flags'
+
+TelemPacket = namedtuple('TelemPacket', telem_tuple_builder)
 
 
 """Returns TelemPacket object (namedtuple). """

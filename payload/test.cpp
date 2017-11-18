@@ -1,7 +1,8 @@
+/** Tests the Coder class. */
+
 #include <stdio.h>
 
 #include "Coder.cpp"
-
 
 int test_coder_types();
 

@@ -8,8 +8,9 @@
 
 - `flight-m0/`
 - `ground-m0/`: Receiver and USB serial forwarder, contains project for board uploading
+- `M0 LoRa Send Recive test/`: Contains code for testing the sender and receiver (notably range).
 
-## Ground forwarder USB protocol
+## Ground forwarder USB protocol (WIP)
 `[2 byte: signal strength][telem-packet-len: raw data]`
 
 First 2 bytes is signal strength (RSSI), followed by fixed length raw telemetry data.

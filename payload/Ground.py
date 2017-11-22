@@ -19,6 +19,9 @@ from datetime import datetime
 
 from decode import *
 
+# how many records need to be written, before commiting to disk
+LOG_FILE_FLUSH_COUNT = 20
+
 TELEM_PACKET_SIZE = 63
 
 def start_loop(port='/dev/ttyS1', baud=57600):
@@ -26,17 +29,18 @@ def start_loop(port='/dev/ttyS1', baud=57600):
     running = True
     with serial.Serial(port, baud) as ser:
         date_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_file = open('logfile-%s.csv' % date_string, 'w+')
+        log_file = open('logs/telem-log-%s.csv' % date_string, 'w+')
         log_write_count = 0
 
         csv_header = telem_tuple_builder.replace(' ', ',') + '\n'
         log_file.write(csv_header)
 
-        ser.write(b'***') # tell device we are ready to start
+        # ser.write(b'***') # tell device we are ready to start
 
         try:
             while running:
 
+                # Arduino restarts when a new serial connection occurs, so the following is not needed
                 # USE IF preamble is needed to sync devices
                 # buf = ser.read(1) # wait for a begin packet
                 # while buf is not b'***':
@@ -50,14 +54,18 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
                 packet = unpack_telem_packet(packet_data)
 
+
                 # save to disk into csv
-                as_csv_row = ','.join([str(v) for v in list(packet)+[rssi]]) + '\n'
+                as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'
+                # as_csv_row = ','.join([str(v) for v in list(packet)+[rssi]]) + '\n'
                 log_file.write(as_csv_row)
 
-                if log_write_count > 20:
+                log_write_count += 1
+                if log_write_count > LOG_FILE_FLUSH_COUNT:
                     log_write_count = 0
                     log_file.flush()
-                    os.fsync() # commit changes without closing
+                    os.fsync(log_file) # commit changes without closing
+
 
                 # print / update screen
 

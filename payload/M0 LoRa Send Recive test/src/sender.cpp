@@ -15,10 +15,14 @@
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+#define LED_WHEN_TRANSMITTING 11
+
 
 void setup() {
 	pinMode(RFM95_RST, OUTPUT);
 	digitalWrite(RFM95_RST, HIGH);
+
+	pinMode(LED_WHEN_TRANSMITTING, OUTPUT);
 
 	// while (!Serial);
 	// Serial.begin(9600);
@@ -55,6 +59,8 @@ void setup() {
 
 int16_t packetnum = 0;  // packet counter, we increment per transmission
 
+unsigned long startTransTime;
+
 void loop() {
 
 	char radiopacket[20] = "Hello #            "; // 19 long + null termination
@@ -72,10 +78,19 @@ void loop() {
 	Serial.print("Sending: "); Serial.println(radiopacket);
 	radiopacket[19] = 0; // null termination
 
+
+	digitalWrite(LED_WHEN_TRANSMITTING, HIGH);
+	startTransTime = millis();
+
 	rf95.send((uint8_t *)radiopacket, 20);
 
 	Serial.println("Waiting for packet to complete..."); delay(10);
 	rf95.waitPacketSent();
+
+	digitalWrite(LED_WHEN_TRANSMITTING, LOW);
+	Serial.print("Done transmitting, ");
+	Serial.print((millis() - startTransTime) * 1000);
+	Serial.println(" sec. to complete.");
 
 	delay(1000);
 }

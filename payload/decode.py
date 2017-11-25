@@ -2,9 +2,9 @@
 from collections import namedtuple
 from struct import unpack
 
-telem_packet_struct_format = "!LdH"
+telem_packet_struct_format = "!hfH"
 
-telem_tuple_builder = 'rssi timehms pi status_flags'
+telem_tuple_builder = 'rssi somefloat status_flags'
 
 TelemPacket = namedtuple('TelemPacket', telem_tuple_builder)
 

@@ -1,7 +1,7 @@
 """ Ground.py
 
 Usage:
-$ python3 Ground.py /dev/portx [baud rate]
+$ python3 Ground.py /dev/[portx] (baud rate)
 
 By: Keely Hill
 17 Nov 2017
@@ -54,6 +54,7 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
                 packet = unpack_telem_packet(packet_data)
 
+                print(packet) # temp dev for testing
 
                 # save to disk into csv
                 as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'

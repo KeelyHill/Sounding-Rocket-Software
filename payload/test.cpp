@@ -18,7 +18,8 @@ int test_coder_types() {
 	uint8_t * to_send;
 	size_t len;
 
-	c.payload_state_bits = 42;
+	// c.setStateFlags(true,true,true,false);
+	c.payload_state_bits = 0b00000111;
 	c.arduino_millis = 42;
 
 	c.gps_hour = 12;
@@ -26,15 +27,17 @@ int test_coder_types() {
 	c.gps_sec = 45;
 	c.gps_millis = 42;
 
-	c.latitude = 42.42;
-	c.longitude = 1.23;
-	c.altitude = 100.2;
-	c.gps_speed = 42;
+	c.latitude = 1.1;
+	c.longitude = 2.2;
+	c.altitude = 3.3;
+	c.gps_speed = 4.4;
 
 	c.num_sats = 3;
-	c.altimeter_alt = 42;
+	c.altimeter_alt = 1;
 
 	c.encode(&to_send, &len);
+
+	// printf("%i\n", len);
 
 	for (int i = 0; i < len; i ++) {
 		printf("\\x%02x", to_send[i]);

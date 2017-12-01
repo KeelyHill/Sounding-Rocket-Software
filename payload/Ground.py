@@ -22,7 +22,8 @@ from decode import *
 # how many records need to be written, before commiting to disk
 LOG_FILE_FLUSH_COUNT = 20
 
-TELEM_PACKET_SIZE = 63
+TELEM_PACKET_SIZE = 35 + 1
+TELEM_PACKET_SIZE = 6 # temp for small testing
 
 def start_loop(port='/dev/ttyS1', baud=57600):
 

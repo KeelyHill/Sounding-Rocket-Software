@@ -65,7 +65,7 @@ bit(from lsb) | name
 #ifndef CODER_CPP
 #define CODER_CPP
 
-#define TELEM_PACKET_SIZE 63 // bytes TODO recalc to check add 1 if doing checksum
+#define TELEM_PACKET_SIZE 35 // bytes TODO recalc to check add 1 if doing checksum 63
 
 #define BIT(x) (0x01 << (x))
 #define bit_write(cond,var,b) (cond ? (var) |= (b) : (var) &= ~(b)) // bit_write(bool, variable, BIT(b))
@@ -183,12 +183,19 @@ public:
 		start = encode_to(packet_number, pkt_ptr, start);
 		start = encode_to(payload_state_bits, pkt_ptr, start);
 		start = encode_to(arduino_millis, pkt_ptr, start);
+
 		start = encode_to(gps_hour, pkt_ptr, start);
 		start = encode_to(gps_min, pkt_ptr, start);
 		start = encode_to(gps_sec, pkt_ptr, start);
 		start = encode_to(gps_millis, pkt_ptr, start);
-		// TODO the rest
 
+		start = encode_to(latitude, pkt_ptr, start);
+		start = encode_to(longitude, pkt_ptr, start);
+		start = encode_to(altitude, pkt_ptr, start);
+		start = encode_to(gps_speed, pkt_ptr, start);
+
+		start = encode_to(num_sats, pkt_ptr, start);
+		start = encode_to(altimeter_alt, pkt_ptr, start);
 
 		// xor sum test, does NOT prepend at the moment
 		uint8_t xorsum = 0;

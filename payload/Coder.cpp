@@ -58,7 +58,9 @@ bit(from lsb) | name
 
 */
 
-#include <cinttypes>
+// #include <cinttypes>
+#include <stdint.h>
+#include <stddef.h>
 
 #ifndef CODER_CPP
 #define CODER_CPP
@@ -68,11 +70,21 @@ bit(from lsb) | name
 #define BIT(x) (0x01 << (x))
 #define bit_write(cond,var,b) (cond ? (var) |= (b) : (var) &= ~(b)) // bit_write(bool, variable, BIT(b))
 
-class Coder { // THIS CAN BE A STRUCT
+class Coder {
 
 	uint8_t packet[TELEM_PACKET_SIZE];
 
 	uint32_t packet_number;
+
+	union floatUnion {
+	    float f;
+	    uint32_t i;
+	};
+
+	union doubleUnion {
+	    float d;
+	    uint64_t i;
+	};
 
 	int encode_to(uint8_t num, uint8_t * packet, size_t start) {
 		packet[start] = num;
@@ -109,13 +121,18 @@ class Coder { // THIS CAN BE A STRUCT
 	}
 
 	int encode_to(float num, uint8_t * packet, size_t start) {
-		uint32_t asInt = *( (uint32_t *)&num );
-		return encode_to(asInt, packet, start);
+		// uint32_t asInt = *( (uint32_t *)&num ); // alias warning
+		floatUnion fu;
+		fu.f = num;
+
+		return encode_to(fu.i, packet, start);
 	}
 
 	int encode_to(double num, uint8_t * packet, size_t start) {
-		uint64_t asInt = *( (uint64_t *)&num );
-		return encode_to(asInt, packet, start);
+		doubleUnion du;
+		du.d = num;
+
+		return encode_to(du.i, packet, start);
 	}
 
 

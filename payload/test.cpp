@@ -9,7 +9,13 @@ int test_coder_types();
 int main() {
 	printf("Testing payload coding.\n");
 
-	test_coder_types();
+	bool success = test_coder_types();
+
+	if (success) {
+		printf("--\nTests Succeeded\n");
+	} else {
+		printf("--\nTests FAILED\n");
+	}
 }
 
 int test_coder_types() {

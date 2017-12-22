@@ -1,6 +1,17 @@
 
 # Payload and Telemetry Software
 
+The flight and ground computer is a M0 Feather with LoRa transiver radio module. TODO more about the chip. The ground computer's only task is as a reciving interface to a laptop. It listens for data on the transmition frequency and forwards it over USB for final decoding, additional logging on disk, and live display.
+
+The flight computer is responsible for reading raw data from all on board sensors, encoding telemetry packets  into a byte array, and transmitting this packet via the LoRa radio.
+
+The Radiohead library is used to communicate over SPI with the radio module. A class ('Coder') was written to encode the many data variables to a 'uint8_t' array.
+
+## Telemetry packet structure 
+
+
+## Directory structure
+
 - `Coder.cpp`: Class for encoding a telemetry packet in flight (see file for docs and packet structure).
 - `decode.py`: Contains function that decodes the payload and stores in named tuple.
 - `Ground.py`: View and logger app launched from command line that reads from the serial connection (radio receiver forwarder).

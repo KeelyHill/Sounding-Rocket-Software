@@ -1,6 +1,7 @@
 """ Ground.py
 
 Usage:
+$ python3 Ground.py list  # list ports
 $ python3 Ground.py /dev/[portx] (baud rate)
 
 By: Keely Hill

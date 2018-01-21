@@ -67,6 +67,9 @@ void loop() {
 			Serial.print("RSSI: ");
 			Serial.println(rf95.lastRssi(), DEC);
 
+			Serial.print("S/N: ");
+			Serial.println(rf95.lastSNR(), DEC);
+
 			Serial.println("----------\n")
 
 			/*

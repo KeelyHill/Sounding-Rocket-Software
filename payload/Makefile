@@ -10,3 +10,9 @@ flight:
 
 flight-upload:
 	cd flight-m0/ && source ~/.platformio/penv/bin/activate && pio run --target upload
+
+ground:
+	cd ground-m0/ && source ~/.platformio/penv/bin/activate && pio run
+
+ground-upload:
+	cd ground-m0/ && source ~/.platformio/penv/bin/activate && pio run --target upload

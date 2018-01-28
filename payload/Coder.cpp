@@ -40,7 +40,7 @@ f altitude (meters)
 f gps_speed (knots)
 i num_sats
 f altimeter altitude
-
+-----
 f x_acceleration
 f y_acceleration
 f z_acceleration
@@ -170,7 +170,7 @@ public:
 		size_t len;
 		myCoder.encode(&to_send, &len);
 	*/
-	void encode(uint8_t **ret, size_t* len) {
+	void encode_telem(uint8_t **ret, size_t* len) {
 		packet_number += 1;
 
 		for (size_t i=0; i<TELEM_PACKET_SIZE; i++) // nullify

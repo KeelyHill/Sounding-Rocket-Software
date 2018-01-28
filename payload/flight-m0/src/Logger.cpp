@@ -16,26 +16,30 @@ class Logger {
 
 	// int logsSinceFlush = 0;
 public:
-	bool sd_okay = false;
+	bool sdOkay = false;
 
 	void begin(int chipSelects, bool debug=false) {
 		initOkay = SD.begin(10);
-		sd_okay = initOkay;
+		sdOkay = initOkay;
 		this->debug = debug;
 	}
 
-	void log(char *data, int len) {
+	void log(uint8_t *data, size_t *len) {
+		this->log((char *)data, len);
+	}
+
+	void log(char *data, size_t *len) {
 
 		if (initOkay) {
-			file = SD.open("data.txt", FILE_WRITE);
+			file = SD.open("flight.data.txt", FILE_WRITE);
 
 			if (file) {
-				file.write(data, len);
+				file.write(data, *len);
 				file.write("\n\n");
-				file.flush();
+				file.flush(); // TODO maybe close instead need to test on board
 				if (debug) Serial.println("Wrote log data.");
 			} else {
-				sd_okay = false;
+				sdOkay = false;
 				if (debug) Serial.println("Failed to open log file.");
 			}
 		}

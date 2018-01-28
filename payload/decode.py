@@ -3,10 +3,10 @@ from collections import namedtuple
 from struct import unpack
 
 telem_packet_struct_format = "!hfH"
-telem_packet_struct_format = "!xIBiBBBHffffBf"
+telem_packet_struct_format = "!xxIBiBBBHffffBf"
 
 telem_tuple_builder = 'rssi somefloat status_flags'
-telem_tuple_builder = 'rssi state_bits arduino_millis gps_hour gps_min gps_sec gps_millis lat lon alt gps_speed num_sats altimeter_alt'
+telem_tuple_builder = 'rssi snr state_bits arduino_millis gps_hour gps_min gps_sec gps_millis lat lon alt gps_speed num_sats altimeter_alt'
 
 TelemPacket = namedtuple('TelemPacket', telem_tuple_builder)
 

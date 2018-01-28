@@ -50,8 +50,8 @@ def start_loop(port='/dev/ttyS1', baud=57600):
                 #     if len(buf) > 3:
                 #         buf = buf[-3:]
 
-                # first 2 bytes is signal strength indicator (rssi), include in unpack
-                packet_data = ser.read(2 + TELEM_PACKET_SIZE) # blocks until all bytes collected
+                # first 4 bytes is signal strength indicator (rssi) and SNR, include in unpack
+                packet_data = ser.read(4 + TELEM_PACKET_SIZE) # blocks until all bytes collected
                 # may want to save raw data to disk too
 
                 packet = unpack_telem_packet(packet_data)

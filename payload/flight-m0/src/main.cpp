@@ -1,4 +1,7 @@
-/** */
+/**
+main.cpp
+
+*/
 
 #define DEBUG false
 
@@ -37,26 +40,6 @@ void useInterruptForGPS(boolean); // proto
 void pullSlavesHighAndInit();
 void GPSDebugPrint();
 
-void radioInit() {
-	while (!rf95.init()) {
-		Serial.println("LoRa radio init failed!!");
-		while (1);  // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
-		// TODO see what happens in a failed case
-	}
-	if (DEBUG) Serial.println("LoRa radio init OK!");
-
-	if (!rf95.setFrequency(RF95_FREQ)) {
-		Serial.println("setFrequency failed");
-		while (1); // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
-		// TODO see what happens in a failed case
-	}
-	if (DEBUG) Serial.print("Freq set to: "); Serial.println(RF95_FREQ);
-
-	// can set transmitter powers from 5 to 23 dBm:
-	rf95.setTxPower(23, false);
-
-	if (DEBUG) Serial.println("LoRa radio READY.");
-}
 
 void setup() {
 	Serial.begin(115200);
@@ -64,8 +47,9 @@ void setup() {
 
 	pullSlavesHighAndInit();
 
+	// radio setup and init
 	common_radio_setup();
-	radioInit();
+	radioInit(rf95);
 
 	GPS.begin(9600);
 	GPSSerial.begin(9600);

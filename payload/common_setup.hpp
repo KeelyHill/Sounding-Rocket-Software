@@ -10,4 +10,12 @@
 
 void common_radio_setup() {
 
+	pinMode(RFM95_RST, OUTPUT);
+	digitalWrite(RFM95_RST, HIGH);
+
+	// manual radio reset TODO test if needed
+	digitalWrite(RFM95_RST, LOW);
+	delay(10);
+	digitalWrite(RFM95_RST, HIGH);
+	delay(10);
 }

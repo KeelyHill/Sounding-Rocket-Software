@@ -17,10 +17,13 @@
 
 #define GPSSerial Serial1
 
-// Status bools
-bool alt_okay, sd_okay, gps_okay, gps_lock;
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-Coder c;
+// Status bools
+bool alt_okay, gps_okay;
+
+Coder coder;
 uint8_t * to_send;
 size_t len_to_send;
 
@@ -31,22 +34,44 @@ bool usingInterruptForGPS = false;
 void useInterruptForGPS(boolean); // proto
 
 // helper prototypes
-void pullSlavesHigh();
+void pullSlavesHighAndInit();
 void GPSDebugPrint();
+
+void radioInit() {
+	while (!rf95.init()) {
+		Serial.println("LoRa radio init failed!!");
+		while (1);  // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
+		// TODO see what happens in a failed case
+	}
+	if (DEBUG) Serial.println("LoRa radio init OK!");
+
+	if (!rf95.setFrequency(RF95_FREQ)) {
+		Serial.println("setFrequency failed");
+		while (1); // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
+		// TODO see what happens in a failed case
+	}
+	if (DEBUG) Serial.print("Freq set to: "); Serial.println(RF95_FREQ);
+
+	// can set transmitter powers from 5 to 23 dBm:
+	rf95.setTxPower(23, false);
+
+	if (DEBUG) Serial.println("LoRa radio READY.");
+}
 
 void setup() {
 	Serial.begin(115200);
 	Serial.println("Flight M0 start up");
 
-	pullSlavesHigh();
+	pullSlavesHighAndInit();
 
-	// common_radio_setup();
+	common_radio_setup();
+	radioInit();
 
 	GPS.begin(9600);
 	GPSSerial.begin(9600);
 
 	GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA); // turn on RMC (recommended minimum) and GGA (fix data) including altitude
-	GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+	GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate, 5 and 10 available
 
 	// Request updates on antenna status, comment out to keep quiet
 	GPS.sendCommand(PGCMD_ANTENNA);
@@ -67,9 +92,10 @@ void setup() {
 
 #ifdef __AVR__
 
-	// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
+	// This interrupt is (auto) called once a millisecond, looks for any new GPS data, and stores it
 	SIGNAL(TIMER0_COMPA_vect) {
-		char c = GPS.read();
+		char c = GPS.read(); // TODO test what happens when this is removed
+
 
 		#ifdef UDR0
 			if (DEBUG)
@@ -103,14 +129,13 @@ void loop() {
 	if (! usingInterruptForGPS) {
 		// read data from the GPS in the 'main loop'
 		char c = GPS.read();
-
 		if (DEBUG)
 			if (c) Serial.print(c);
 	}
 
 
 	if (GPS.newNMEAreceived()) {
-    	bool parseOkay = GPS.parse(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+    	bool parseOkay = GPS.parse(GPS.lastNMEA());  // this also sets the newNMEAreceived() flag to false
 
 		gps_okay = parseOkay;
 
@@ -123,21 +148,35 @@ void loop() {
 
 	if (millis() - timer_2sec > 2000) { // every two seconds
 		timer_2sec = millis();
-
 	}
 
-	// logger.log(data);
+	// set telemetry variables in the coder
+	coder.arduino_millis = millis();
+	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
+
+	coder.encode_telem(&to_send, &len_to_send);
 
 
-	digitalWrite(LED_BUILTIN, HIGH);
-	delay(500);
-	digitalWrite(LED_BUILTIN, LOW);
-	delay(500);
+	/* log and send if radio open */
 
-	Serial.println("pizza");
+	logger.log(to_send, &len_to_send);
+
+	/* Only queue/send the packet if not in the middle of transmitting */
+	// If not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
+	if (rf95.mode() == RHGenericDriver::RHModeIdle) {
+		// TODO if this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
+		if (DEBUG) Serial.println("START telemetry transmission."); // TODO test
+		rf95.send(to_send, len_to_send);
+	}
+
+	delay(10);
+	// Serial.println("-TICK-");
 }
 
-void pullSlavesHigh() {
+void pullSlavesHighAndInit() {
+
+	pinMode(RFM95_CS, OUTPUT);
+	digitalWrite(RFM95_CS, HIGH); // TODO test to ensure RadioHead pulls to low when trying to talk to the LoRa.
 
 	pinMode(SS_ALT, OUTPUT);
 	digitalWrite(SS_ALT, HIGH);

@@ -41,7 +41,7 @@ int test_coder_types() {
 	c.num_sats = 3;
 	c.altimeter_alt = 1;
 
-	c.encode(&to_send, &len);
+	c.encode_telem(&to_send, &len);
 
 	// printf("%i\n", len);
 

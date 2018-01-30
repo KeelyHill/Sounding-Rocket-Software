@@ -18,7 +18,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 void setup() {
 	pinMode(STATUS_LED_PIN, OUTPUT);
-	digitalWrite(STATUS_LED_PIN, LOW);   // turn the LED on (HIGH is the voltage level)
+	digitalWrite(STATUS_LED_PIN, LOW);
 
 	Serial.begin(57600);
 
@@ -35,7 +35,7 @@ uint8_t rssiAndSNR[4];
 void loop() {
 	if (rf95.available()) { // new message available?
 
-		digitalWrite(STATUS_LED_PIN, HIGH);  // status led off
+		digitalWrite(STATUS_LED_PIN, HIGH);
 
 		if (rf95.recv(recv_buf, &recv_len)) {
 

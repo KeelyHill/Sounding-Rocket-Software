@@ -2,6 +2,10 @@
 from collections import namedtuple
 from struct import unpack
 
+# in bytes
+TELEM_PACKET_SIZE_RAW = 38
+TELEM_PACKET_SIZE = 6 # temp for small testing
+
 telem_packet_struct_format = "!xxIBLfBBBHffffBH"
 
 telem_tuple_builder_raw = 'packet_num state_bits arduino_millis altimeter_alt gps_hour gps_min gps_sec gps_millis lat lon alt gps_speed num_sats tx_good'
@@ -16,7 +20,7 @@ def unpack_telem_packet(data:bytes):
     return TelemPacket._make(unpack(telem_packet_struct_format, data))
 
 """Unpacks struct of raw telemetry packet written to flight SD card"""
-def unpack_sd_log_row(data:bytes):
+def unpack_sd_log_packet(data:bytes):
     return TelemPacketRaw._make(unpack('!' + telem_packet_struct_format[2:], data))
 
 

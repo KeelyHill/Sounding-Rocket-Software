@@ -26,10 +26,11 @@ Usage:
 
 Type | name
 
-c xor_check?
+~~c xor_check?~~ IDEA TODO
 I packet number
 B payload state (bit flags)
-I Arduino millis
+L Arduino millis
+f altimeter altitude
 B gps_hour
 B gps_min
 B gps_sec
@@ -38,8 +39,7 @@ f latitude
 f longitude
 f altitude (meters)
 f gps_speed (knots)
-i num_sats
-f altimeter altitude
+B num_sats
 -----
 f x_acceleration
 f y_acceleration
@@ -141,12 +141,12 @@ public:
 	/** telemetry sent variables */
 	uint8_t payload_state_bits;
 	uint32_t arduino_millis;
+	float altimeter_alt;
 	uint8_t gps_hour, gps_min, gps_sec;
 	uint16_t gps_millis;
 	float latitude, longitude, altitude;
 	float gps_speed;
 	uint8_t num_sats;
-	float altimeter_alt;
 
 	Coder() {
 		packet_number = 0;
@@ -184,6 +184,8 @@ public:
 		start = encode_to(payload_state_bits, pkt_ptr, start);
 		start = encode_to(arduino_millis, pkt_ptr, start);
 
+		start = encode_to(altimeter_alt, pkt_ptr, start);
+
 		start = encode_to(gps_hour, pkt_ptr, start);
 		start = encode_to(gps_min, pkt_ptr, start);
 		start = encode_to(gps_sec, pkt_ptr, start);
@@ -195,7 +197,6 @@ public:
 		start = encode_to(gps_speed, pkt_ptr, start);
 
 		start = encode_to(num_sats, pkt_ptr, start);
-		start = encode_to(altimeter_alt, pkt_ptr, start);
 
 		// xor sum test, does NOT prepend at the moment
 		uint8_t xorsum = 0;

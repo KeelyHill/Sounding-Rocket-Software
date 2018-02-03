@@ -2,18 +2,22 @@
 from collections import namedtuple
 from struct import unpack
 
-telem_packet_struct_format = "!hfH"
-telem_packet_struct_format = "!xxIBLfBBBHffffB"
+telem_packet_struct_format = "!xxIBLfBBBHffffBH"
 
-telem_tuple_builder = 'rssi somefloat status_flags'
-telem_tuple_builder = 'rssi snr state_bits arduino_millis altimeter_alt gps_hour gps_min gps_sec gps_millis lat lon alt gps_speed num_sats'
+telem_tuple_builder_raw = 'packet_num state_bits arduino_millis altimeter_alt gps_hour gps_min gps_sec gps_millis lat lon alt gps_speed num_sats tx_good'
+telem_tuple_builder = 'rssi snr ' + telem_tuple_builder_raw
 
-TelemPacket = namedtuple('TelemPacket', telem_tuple_builder)
+TelemPacket = namedtuple('TelemPacket', telem_tuple_builder) # forwared from reciver, includes rssi & snr
+TelemPacketRaw = namedtuple('TelemPacket', telem_tuple_builder) # raw written to sd (what is actually transmitted)
 
 
 """Returns TelemPacket object (namedtuple). """
 def unpack_telem_packet(data:bytes):
     return TelemPacket._make(unpack(telem_packet_struct_format, data))
+
+"""Unpacks struct of raw telemetry packet written to flight SD card"""
+def unpack_sd_log_row(data:bytes):
+    return TelemPacketRaw._make(unpack('!' + telem_packet_struct_format[2:], data))
 
 
 # test by running as main (i.e. not importing) TODO grab a real packet that works and put here for the test

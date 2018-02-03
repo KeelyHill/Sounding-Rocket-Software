@@ -40,6 +40,7 @@ f longitude
 f altitude (meters)
 f gps_speed (knots)
 B num_sats
+H tx_good  # successful tx
 -----
 f x_acceleration
 f y_acceleration
@@ -147,6 +148,7 @@ public:
 	float latitude, longitude, altitude;
 	float gps_speed;
 	uint8_t num_sats;
+	uint16_t tx_good;
 
 	Coder() {
 		packet_number = 0;

@@ -138,6 +138,8 @@ void loop() {
 	coder.arduino_millis = millis();
 	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
 
+	coder.tx_good = rf95.txGood(); // uint16_t total _sent_ packets can use to calc sent/received ratio
+
 	coder.encode_telem(&to_send, &len_to_send);
 
 

@@ -1,6 +1,8 @@
 /** Base station */
 
-#if DOLISTENER==true
+#include "compile_picker.cpp"
+
+#if DOLISTENER == true
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -14,7 +16,6 @@
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
-
 
 void setup() {
 	pinMode(RFM95_RST, OUTPUT);
@@ -61,7 +62,7 @@ void loop() {
 			// raw bytes
 			RH_RF95::printBuffer("Received: ", buf, len);
 
-			Serial.print("msg:: ");
+			Serial.print("msg: ");
 			Serial.println((char*)buf);
 
 			Serial.print("RSSI: ");
@@ -70,7 +71,7 @@ void loop() {
 			Serial.print("S/N: ");
 			Serial.println(rf95.lastSNR(), DEC);
 
-			Serial.println("----------\n")
+			Serial.println("----------\n");
 
 			/*
 			// Send a reply

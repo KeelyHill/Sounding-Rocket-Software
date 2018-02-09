@@ -23,6 +23,8 @@ def unpack_telem_packet(data:bytes):
 def unpack_sd_log_packet(data:bytes):
     return TelemPacketRaw._make(unpack('!' + telem_packet_struct_format[2:], data))
 
+def state_bit_get(state_bits_int, num_bit):
+    return (state_bits_int >> num_bit) & 0x01
 
 # test by running as main (i.e. not importing) TODO grab a real packet that works and put here for the test
 if __name__ == '__main__':

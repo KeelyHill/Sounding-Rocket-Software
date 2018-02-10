@@ -3,7 +3,7 @@ main.cpp
 
 */
 
-#define DEBUG false
+#include "global.h"
 
 #include <Arduino.h>
 #include <Adafruit_GPS.h>
@@ -17,6 +17,11 @@ main.cpp
 #define SS_ALT 2
 #define SS_ACCEL 3
 #define SS_SD 4
+
+// SPI control pins are correct
+#define SPI_SCK 24
+#define SPI_MISO 22
+#define SPI_MOSI 23
 
 #define GPSSerial Serial1
 
@@ -66,7 +71,7 @@ void setup() {
 	 	useInterruptForGPS(true);
 	#endif
 
-	logger.begin(SS_SD, DEBUG);
+	logger.begin(SS_SD);
 
 	Serial.println("Setup done.");
 

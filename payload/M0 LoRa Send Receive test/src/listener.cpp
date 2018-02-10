@@ -46,32 +46,50 @@ void setup() {
 	}
 	Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
-	// Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
+	// Defaults after init are 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
 	rf95.setTxPower(23, false);
 }
 
+unsigned long time_at_last_recv = 0;
+unsigned long delta_time = 0;
+
 void loop() {
 	if (rf95.available()) {
-	    // Should be a message by now
+	    // is a new message available?
 
 		uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
 	    uint8_t len = sizeof(buf);
 
 	    if (rf95.recv(buf, &len)) {
-			// raw bytes
-			RH_RF95::printBuffer("Received: ", buf, len);
+			// len NOT necessarily RH_RF95_MAX_MESSAGE_LEN
 
-			Serial.print("msg: ");
-			Serial.println((char*)buf);
+			#if CSV_NOT_HUMAN==true
+				delta_time = millis() - time_at_last_recv;
+				time_at_last_recv = millis();
 
-			Serial.print("RSSI: ");
-			Serial.println(rf95.lastRssi(), DEC);
+				Serial.print((char*)buf); // expecting a csv line
+				Serial.print(",");
+				Serial.print(rf95.lastRssi(), DEC);
+				Serial.print(",");
+				Serial.print(rf95.lastSNR(), DEC);
+				Serial.print(",");
+				Serial.print(delta_time);
+				Serial.println();
+			#else
+				RH_RF95::printBuffer("Received: ", buf, len); // raw bytes
 
-			Serial.print("S/N: ");
-			Serial.println(rf95.lastSNR(), DEC);
+				Serial.print("msg: ");
+				Serial.println((char*)buf);
 
-			Serial.println("----------\n");
+				Serial.print("RSSI: ");
+				Serial.println(rf95.lastRssi(), DEC);
+
+				Serial.print("S/N: ");
+				Serial.println(rf95.lastSNR(), DEC);
+
+				Serial.println("----------\n");
+			#endif
 
 			/*
 			// Send a reply

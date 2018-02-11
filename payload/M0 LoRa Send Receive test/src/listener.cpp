@@ -69,12 +69,14 @@ void loop() {
 				time_at_last_recv = millis();
 
 				Serial.print((char*)buf); // expecting a csv line
-				Serial.print(",");
+				Serial.print(","); // continue with comma
 				Serial.print(rf95.lastRssi(), DEC);
 				Serial.print(",");
 				Serial.print(rf95.lastSNR(), DEC);
 				Serial.print(",");
-				Serial.print(delta_time);
+				Serial.print(len, DEC); // for bits/sec calculation
+				Serial.print(",");
+				Serial.print(delta_time); // in millis
 				Serial.println();
 			#else
 				RH_RF95::printBuffer("Received: ", buf, len); // raw bytes

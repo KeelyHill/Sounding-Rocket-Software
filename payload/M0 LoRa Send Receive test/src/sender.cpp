@@ -76,8 +76,9 @@ void loop() {
 		float measuredvbat = analogRead(VBATPIN);
 		measuredvbat *= 6.6; // 2 * 3.3volts
 		measuredvbat /= 1024; // convert to voltage
-		int miliVolts = (int)(measuredvbat * 1000);
+		int miliVolts = (int)(measuredvbat * 1000); // can be int16_t
 
+		// make packet
 		sprintf(radiopacket, "%d,%d,abc123", packetnum++, miliVolts);
 
 		Serial.print("Sending: "); Serial.println(radiopacket);

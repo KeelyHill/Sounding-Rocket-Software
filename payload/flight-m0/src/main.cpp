@@ -47,12 +47,19 @@ void GPSDebugPrint();
 
 
 void setup() {
-	Serial.begin(115200);
+
+	if (DEBUG) {
+		while (!Serial);
+		Serial.begin(115200);
+		delay(100);
+	}
+
 	Serial.println("Flight M0 start up");
 
 	pullSlavesHighAndInit();
 
 	// radio setup and init
+
 	common_radio_setup();
 	radioInit(rf95);
 
@@ -118,25 +125,42 @@ void loop() {
 	if (! usingInterruptForGPS) {
 		// read data from the GPS in the 'main loop'
 		char c = GPS.read();
-		if (DEBUG)
+		if (DEBUG && DEBUG_GPS_RAW)
 			if (c) Serial.print(c);
 	}
 
 
 	if (GPS.newNMEAreceived()) {
-    	bool parseOkay = GPS.parse(GPS.lastNMEA());  // this also sets the newNMEAreceived() flag to false
+		char * lastNMEA = GPS.lastNMEA();
 
-		gps_okay = parseOkay;
+		// Serial.print("5th char:::");
+		// Serial.println(lastNMEA[5]);
+		//
+		// Serial.print("RAW:");
+		// Serial.println(lastNMEA); Serial.println("---");
+		// if ((lastNMEA[3] == 'G' && lastNMEA[4] == 'G' && lastNMEA[5] == 'A') || (lastNMEA[3] == 'R' && lastNMEA[4] == 'M' && lastNMEA[5] == 'C')) {
+		if (lastNMEA[5] == 'G'|| lastNMEA[5] == 'M') {
+			bool parseOkay = GPS.parse(lastNMEA);  // this also sets the newNMEAreceived() flag to false
 
-		if (parseOkay)
-			GPSDebugPrint();
-		else if (DEBUG) Serial.println("GPS Parse Failed.");
+			gps_okay = parseOkay;
 
+			if (parseOkay)
+				GPSDebugPrint();
+			else if (DEBUG) Serial.println("GPS Parse Failed.");
+		}
   	}
+
+	/* Sample 9DOF and update internal orientation filter. */
+	imu.sample();
+	float roll = imu.filter.getRoll();
+	float pitch = imu.filter.getPitch();
+	float yaw = imu.filter.getYaw();
+
+	imu.debugPrint();
 
 
 	if (millis() - timer_2sec > 2000) { // every two seconds
-		timer_2sec = millis();
+		timer_2sec = millis(); // not used at the moment
 	}
 
 	// set telemetry variables in the coder
@@ -197,14 +221,15 @@ void GPSDebugPrint() {
 
 		if (GPS.fix) {
 			Serial.print("Location: ");
-			Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+			Serial.print(GPS.latitudeDegrees, 4);
 			Serial.print(", ");
-			Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
+			Serial.println(GPS.longitudeDegrees, 4);
 
 			Serial.print("Speed (knots): "); Serial.println(GPS.speed);
 			Serial.print("Angle: "); Serial.println(GPS.angle);
 			Serial.print("Altitude: "); Serial.println(GPS.altitude);
 			Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
 		}
+		Serial.println();
 	}
 }

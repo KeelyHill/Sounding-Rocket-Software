@@ -42,12 +42,9 @@ f gps_speed (knots)
 B num_sats
 H tx_good  # successful tx
 -----
-f x_acceleration
-f y_acceleration
-f z_acceleration
-f x_gyro
-f y_gyro
-f z_gyro
+f roll
+f pitch
+f yaw
 
 State Flag Bits
 

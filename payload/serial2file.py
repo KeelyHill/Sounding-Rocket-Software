@@ -38,6 +38,7 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
         except KeyboardInterrupt:
             running = False
+            log_file.flush()
             log_file.close()
 
 def main(argv):

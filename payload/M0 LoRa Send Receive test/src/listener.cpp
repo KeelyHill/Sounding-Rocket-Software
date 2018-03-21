@@ -49,6 +49,11 @@ void setup() {
 	// Defaults after init are 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
 	rf95.setTxPower(23, false);
+
+	// rf95.setModemConfig(RH_RF95::Bw125Cr45Sf128); // Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Default medium range
+	// rf95.setModemConfig(RH_RF95::Bw500Cr45Sf128); // Bw = 500 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Fast+short range.
+	// rf95.setModemConfig(RH_RF95::Bw31_25Cr48Sf512); // Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range.
+	rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096); // Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range.
 }
 
 unsigned long time_at_last_recv = 0;
@@ -73,8 +78,6 @@ void loop() {
 				Serial.print(rf95.lastRssi(), DEC);
 				Serial.print(",");
 				Serial.print(rf95.lastSNR(), DEC);
-				Serial.print(",");
-				Serial.print(len, DEC); // for bits/sec calculation
 				Serial.print(",");
 				Serial.print(delta_time); // in millis
 				Serial.println();

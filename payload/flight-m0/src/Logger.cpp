@@ -20,8 +20,8 @@ class Logger {
 public:
 	bool sdOkay = false;
 
-	void begin(int chipSelects) {
-		initOkay = SD.begin(10);
+	void begin(int chipSelect) {
+		initOkay = SD.begin(chipSelect);
 		sdOkay = initOkay;
 	}
 

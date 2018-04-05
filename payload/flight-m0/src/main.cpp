@@ -15,9 +15,9 @@ main.cpp
 #include "IMU.cpp"
 
 // TODO real SS pins
-#define SS_ALT 2
-#define SS_ACCEL 3
-#define SS_SD 4
+#define SS_ALT 11
+#define SS_ACCEL 12
+#define SS_SD 13
 
 // SPI control pins are correct
 #define SPI_SCK 24

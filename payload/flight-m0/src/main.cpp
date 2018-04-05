@@ -12,6 +12,7 @@ main.cpp
 #include "../../Coder.cpp"
 
 #include "Logger.cpp"
+#include "IMU.cpp"
 
 // TODO real SS pins
 #define SS_ALT 2
@@ -36,10 +37,12 @@ uint8_t * to_send;
 size_t len_to_send;
 
 Logger logger;
+IMU imu;
 
 Adafruit_GPS GPS(&GPSSerial);
 bool usingInterruptForGPS = false;
 void useInterruptForGPS(boolean); // proto
+
 
 // helper prototypes
 void pullSlavesHighAndInit();
@@ -133,9 +136,6 @@ void loop() {
 	if (GPS.newNMEAreceived()) {
 		char * lastNMEA = GPS.lastNMEA();
 
-		// Serial.print("5th char:::");
-		// Serial.println(lastNMEA[5]);
-		//
 		// Serial.print("RAW:");
 		// Serial.println(lastNMEA); Serial.println("---");
 		// if ((lastNMEA[3] == 'G' && lastNMEA[4] == 'G' && lastNMEA[5] == 'A') || (lastNMEA[3] == 'R' && lastNMEA[4] == 'M' && lastNMEA[5] == 'C')) {

@@ -1,0 +1,3 @@
+[submodule "payload/flight-m0/lib/Adafruit_LSM9DS1"]
+	path = payload/flight-m0/lib/Adafruit_LSM9DS1
+	url = https://github.com/adafruit/Adafruit_LSM9DS1

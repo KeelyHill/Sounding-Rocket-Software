@@ -58,7 +58,7 @@ public:
 	/** Samples the LSM device (over whichever bus) and updates the orientation filter. */
 	void sample() {
 		lsm.getEvent(&accel, &mag, &gyro, &temp);
-		static double delta_IMU_time = millis()/1000 - lastIMUSamp/1000;
+		double delta_IMU_time = millis()/1000.0f - lastIMUSamp/1000.0f;
 		lastIMUSamp = millis();
 		// float heading = atan2(mag.magnetic.y, mag.magnetic.x); // atan2(y/x)
 		// Serial.print(heading * 180/M_PI); Serial.print(" - "); Serial.print(mag.magnetic.x); Serial.print(" "); Serial.print(mag.magnetic.y); Serial.print(" "); Serial.println(mag.magnetic.z);
@@ -85,12 +85,15 @@ public:
 		gy *= 57.2958F;
 		gz *= 57.2958F;
 
-		// mx = my = mz = 0; // disable magno temp
-
 		filter.update(gx, gy, gz,
 	                accel.acceleration.x, accel.acceleration.y, accel.acceleration.z,
 	                mx, my, mz,
 					delta_IMU_time);
+
+		// 
+		// filter.updateIMU(gx, gy, gz,
+	    //             accel.acceleration.x, accel.acceleration.y, accel.acceleration.z,
+		// 			delta_IMU_time);
 
 
 		if (DEBUG) {
@@ -121,25 +124,25 @@ public:
 	*/
 	void calibrationPrint() {
 		Serial.print("Raw:");
-		Serial.print(accel.acceleration.x, 0);
+		Serial.print((int)(accel.acceleration.x * 1000));
 		Serial.print(",");
-		Serial.print(accel.acceleration.y, 0);
+		Serial.print((int)(accel.acceleration.y * 1000));
 		Serial.print(",");
-		Serial.print(accel.acceleration.z, 0);
-		Serial.print(",");
-
-		Serial.print(gyro.gyro.x, 0);
-		Serial.print(",");
-		Serial.print(gyro.gyro.y, 0);
-		Serial.print(",");
-		Serial.print(gyro.gyro.z, 0);
+		Serial.print((int)(accel.acceleration.z * 1000));
 		Serial.print(",");
 
-		Serial.print(mag.magnetic.x, 0);
+		Serial.print((int)(gyro.gyro.x * 1000));
 		Serial.print(",");
-		Serial.print(mag.magnetic.y, 0);
+		Serial.print((int)(gyro.gyro.y * 1000));
 		Serial.print(",");
-		Serial.print(mag.magnetic.z, 0);
+		Serial.print((int)(gyro.gyro.z * 1000));
+		Serial.print(",");
+
+		Serial.print((int)(mag.magnetic.x * 1000));
+		Serial.print(",");
+		Serial.print((int)(mag.magnetic.y * 1000));
+		Serial.print(",");
+		Serial.print((int)(mag.magnetic.z * 1000));
 		Serial.println();
 	}
 };

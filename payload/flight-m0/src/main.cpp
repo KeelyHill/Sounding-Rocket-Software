@@ -15,7 +15,6 @@ main.cpp
 #include "Logger.cpp"
 #include "IMU.cpp"
 
-// TODO real SS pins
 #define SS_ALT 11
 #define SS_ACCEL 12
 #define SS_SD 13
@@ -26,6 +25,8 @@ main.cpp
 #define SPI_MOSI 23
 
 #define GPSSerial Serial1
+
+#define STATUS_LED LED_BUILTIN
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -59,6 +60,8 @@ void setup() {
 		delay(100);
 	}
 
+	pinMode(STATUS_LED, OUTPUT);
+
 	Serial.println("Flight M0 start up");
 
 	pullSlavesHighAndInit();
@@ -67,6 +70,8 @@ void setup() {
 
 	common_radio_setup();
 	radioInit(rf95);
+
+	// GPS setup
 
 	GPS.begin(9600);
 	GPSSerial.begin(9600);
@@ -83,20 +88,20 @@ void setup() {
 	 	useInterruptForGPS(true);
 	#endif
 
-	logger.begin(SS_SD);
+	// Other sensor setup
 
-	Serial.println("Setup done.");
 	while (!bme.begin()) {
 		Serial.println("Could not find a valid BMP280 sensor, check wiring!");
 		delay(300);
   	}
 
-	pinMode(LED_BUILTIN, OUTPUT);
 	while(!imu.begin()) {
 		Serial.println("No LSM9DS1 detected ... Check your wiring!");
 		delay(300);
 	}
 
+
+	Serial.println("Setup done.");
 }
 
 #ifdef __AVR__
@@ -166,34 +171,50 @@ void loop() {
 	float pitch = imu.filter.getPitch();
 	float yaw = imu.filter.getYaw();
 
-	imu.debugPrint();
+	// imu.debugPrint();
+	// imu.calibrationPrint();
 
+	// generalDebugPrint();
 
 	if (millis() - timer_2sec > 2000) { // every two seconds
 		timer_2sec = millis(); // not used at the moment
 	}
 
-	// set telemetry variables in the coder
+	/* Set telemetry variables in the coder */
 	coder.arduino_millis = millis();
 	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
+	coder.altimeter_alt = bme.readPressure(); // TODO, pressure for now, so we can calc post flight. bme.readAltitude(1010.82)
+
+	// coder.gps_hour = xxx;
+	// coder.gps_min = xxx;
+	// coder.gps_sec = xxx;
+	// coder.gps_millis = xxx;  // TODO probably not needed
+	// coder.latitude = xxx;
+	// coder.longitude = xxx;
+	// coder.altitude = xxx;
+	// coder.gps_speed = xxx;
+	// coder.num_sats = xxx;
 
 	coder.tx_good = rf95.txGood(); // uint16_t total _sent_ packets can use to calc sent/received ratio
 
 	coder.encode_telem(&to_send, &len_to_send);
 
+	/* Log then Transmit if radio open */
 
-	/* log and send if radio open */
+	// logger.log(to_send, &len_to_send);
 
-	logger.log(to_send, &len_to_send);
+	// transmitTelemIfRadioAvaliable();
+}
 
-	/* Only queue/send the packet if not in the middle of transmitting */
-	// If not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
+/* Only queue/send the packet if not in the middle of transmitting. Returns immediately. */
+void transmitTelemIfRadioAvaliable() {
+	// if not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
 	if (rf95.mode() == RHGenericDriver::RHModeIdle) {
-		// TODO if this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
+		// TODO IF this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
 		if (DEBUG) Serial.println("START telemetry transmission."); // TODO test
+
 		rf95.send(to_send, len_to_send);
 	}
-
 }
 
 void pullSlavesHighAndInit() {

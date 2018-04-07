@@ -7,6 +7,7 @@ main.cpp
 
 #include <Arduino.h>
 #include <Adafruit_GPS.h>
+#include <Adafruit_BMP280.h>
 
 #include "../../common_setup.hpp"
 #include "../../Coder.cpp"
@@ -38,6 +39,7 @@ size_t len_to_send;
 
 Logger logger;
 IMU imu;
+Adafruit_BMP280 bme(SS_ALT); //hardware SPI //, SPI_MOSI, SPI_MISO, SPI_SCK);
 
 Adafruit_GPS GPS(&GPSSerial);
 bool usingInterruptForGPS = false;
@@ -84,8 +86,16 @@ void setup() {
 	logger.begin(SS_SD);
 
 	Serial.println("Setup done.");
+	while (!bme.begin()) {
+		Serial.println("Could not find a valid BMP280 sensor, check wiring!");
+		delay(300);
+  	}
 
 	pinMode(LED_BUILTIN, OUTPUT);
+	while(!imu.begin()) {
+		Serial.println("No LSM9DS1 detected ... Check your wiring!");
+		delay(300);
+	}
 
 }
 

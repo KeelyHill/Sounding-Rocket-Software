@@ -185,15 +185,17 @@ void loop() {
 	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
 	coder.altimeter_alt = bme.readPressure(); // TODO, pressure for now, so we can calc post flight. bme.readAltitude(1010.82)
 
-	// coder.gps_hour = xxx;
-	// coder.gps_min = xxx;
-	// coder.gps_sec = xxx;
-	// coder.gps_millis = xxx;  // TODO probably not needed
-	// coder.latitude = xxx;
-	// coder.longitude = xxx;
-	// coder.altitude = xxx;
-	// coder.gps_speed = xxx;
-	// coder.num_sats = xxx;
+	if (GPS.fix) {
+		coder.gps_hour = GPS.hour;
+		coder.gps_min = GPS.minute;
+		coder.gps_sec = GPS.seconds;
+		coder.gps_millis = GPS.milliseconds;  // TODO probably not needed
+		coder.latitude = GPS.latitudeDegrees;
+		coder.longitude = GPS.longitudeDegrees;
+		coder.altitude = GPS.altitude;
+		coder.gps_speed = GPS.speed;
+		coder.num_sats = GPS.satellites;
+	}
 
 	coder.tx_good = rf95.txGood(); // uint16_t total _sent_ packets can use to calc sent/received ratio
 

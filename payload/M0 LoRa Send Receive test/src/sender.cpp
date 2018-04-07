@@ -109,7 +109,7 @@ void loop() {
 		rf95.send((uint8_t *)radiopacket, 20);
 	#endif
 
-	Serial.println("Waiting for packet to complete..."); delay(5);
+	Serial.println("Waiting for packet to complete...");
 	rf95.waitPacketSent();
 
 	digitalWrite(LED_WHEN_TRANSMITTING, LOW);
@@ -117,7 +117,7 @@ void loop() {
 	Serial.print((float)(millis() - startTransTime) / 1000);
 	Serial.println(" sec. to complete.\n");
 
-	delay(10);
+	delay(20);
 }
 
 #endif

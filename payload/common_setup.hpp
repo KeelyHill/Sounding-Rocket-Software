@@ -39,5 +39,9 @@ void radioInit(RH_RF95 &rf95) {
 	// can set transmitter powers from 5 to 23 dBm:
 	rf95.setTxPower(23, false);
 
+	// rf95.setModemConfig(RH_RF95::Bw125Cr45Sf128); // Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Default medium range
+	// rf95.setModemConfig(RH_RF95::Bw31_25Cr48Sf512); // Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range.
+	rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096); // Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+very_long range.
+
 	if (DEBUG) Serial.println("LoRa radio READY.");
 }

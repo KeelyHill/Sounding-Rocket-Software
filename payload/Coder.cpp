@@ -197,11 +197,13 @@ public:
 
 		start = encode_to(num_sats, pkt_ptr, start);
 
+		start = encode_to(tx_good, pkt_ptr, start);
+
 		// xor sum test, does NOT prepend at the moment
-		uint8_t xorsum = 0;
-		for (size_t i=0; i<TELEM_PACKET_SIZE; i++) {
-			xorsum ^= packet[i];
-		}
+		// uint8_t xorsum = 0;
+		// for (size_t i=0; i<TELEM_PACKET_SIZE; i++) {
+		// 	xorsum ^= packet[i];
+		// }
 
 		// returns
 		*len = TELEM_PACKET_SIZE;

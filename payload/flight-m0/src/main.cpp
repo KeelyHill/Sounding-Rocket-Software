@@ -70,10 +70,10 @@ void setup() {
 	GPSSerial.begin(9600);
 
 	GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA); // turn on RMC (recommended minimum) and GGA (fix data) including altitude
-	GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate, 5 and 10 available
-
+	// GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
+	GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);   // 1 Hz update rate, 5 and 10 available
 	// Request updates on antenna status, comment out to keep quiet
-	GPS.sendCommand(PGCMD_ANTENNA);
+	// GPS.sendCommand(PGCMD_ANTENNA);
 
 	#ifdef __arm__
 		usingInterruptForGPS = false;  //NOTE - we don't want to use interrupts on the Due
@@ -184,8 +184,6 @@ void loop() {
 		rf95.send(to_send, len_to_send);
 	}
 
-	delay(10);
-	// Serial.println("-TICK-");
 }
 
 void pullSlavesHighAndInit() {

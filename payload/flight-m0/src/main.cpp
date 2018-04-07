@@ -50,6 +50,7 @@ void useInterruptForGPS(boolean); // proto
 // helper prototypes
 void pullSlavesHighAndInit();
 void GPSDebugPrint();
+void printlnRawBytes(uint8_t *bytes, size_t* len);
 
 
 void setup() {
@@ -203,6 +204,11 @@ void loop() {
 
 	/* Log then Transmit if radio open */
 
+	if (DEBUG) {
+		printlnRawBytes(to_send, &len_to_send);
+		delay(100);
+	}
+
 	// logger.log(to_send, &len_to_send);
 
 	// transmitTelemIfRadioAvaliable();
@@ -263,4 +269,14 @@ void GPSDebugPrint() {
 		}
 		Serial.println();
 	}
+}
+
+void printlnRawBytes(uint8_t *bytes, size_t* len) {
+	for (size_t i=0; i<*len; i++) {
+		Serial.print("\\x");
+		Serial.print(bytes[i] < 16 ? "0" : "");
+		Serial.print(bytes[i], HEX);
+	}
+	Serial.println("\n");
+
 }

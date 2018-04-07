@@ -36,6 +36,8 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
         # ser.write(b'***') # tell device we are ready to start
 
+        last_time = None
+
         try:
             while running:
 
@@ -47,13 +49,19 @@ def start_loop(port='/dev/ttyS1', baud=57600):
                 #     if len(buf) > 3:
                 #         buf = buf[-3:]
 
+                # # get delta time between packets to calculate bps (wip)
+                # if last_time == None:
+                #     last_time = time.now()
+                # else:
+                #     d_t = time.now() - last_time
+                #     last_time = time.now()
+                #     times.append(d_t)
+
                 # first 4 bytes is signal strength indicator (rssi) and SNR, include in unpack
                 packet_data = ser.read(4 + TELEM_PACKET_SIZE_RAW) # blocks until all bytes collected
                 # may want to save raw data to disk too
 
                 packet = unpack_telem_packet(packet_data)
-
-                print(packet) # temp dev for testing
 
                 # save to disk into csv
                 as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'
@@ -68,6 +76,7 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
 
                 # print / update screen
+                print("tx_good: %i   state_bits: %i   altimeter_alt: %f   lat/lon: %i,%i" % (packet.tx_good, packet.state_bits, packet.altimeter_alt, lat, lon))
 
         except KeyboardInterrupt:
             running = False

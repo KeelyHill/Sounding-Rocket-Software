@@ -70,7 +70,9 @@ void setup() {
 	// radio setup and init
 
 	common_radio_setup();
-	radioInit(rf95);
+	bool radioInitSuccess = radioInit(rf95);
+	digitalWrite(STATUS_LED, !radioInitSuccess); // on if failed to init
+
 
 	// GPS setup
 

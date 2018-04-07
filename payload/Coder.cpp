@@ -26,7 +26,7 @@ Usage:
 
 Type | name
 
-~~c xor_check?~~ IDEA TODO
+~~c finger print?~~ IDEA TODO
 I packet number
 B payload state (bit flags)
 L Arduino millis

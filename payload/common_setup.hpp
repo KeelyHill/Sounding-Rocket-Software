@@ -21,18 +21,23 @@ void common_radio_setup() {
 	delay(10);
 }
 
-void radioInit(RH_RF95 &rf95) {
-	while (!rf95.init()) {
+bool radioInit(RH_RF95 &rf95) {
+	if (!rf95.init()) {
+		// digitalWrite(RFM95_CS, LOW);
 		Serial.println("LoRa radio init failed!!");
-		while (1);  // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
+
 		// TODO see what happens in a failed case
+
+		return false;
 	}
 	if (DEBUG) Serial.println("LoRa radio init OK!");
 
 	if (!rf95.setFrequency(RF95_FREQ)) {
 		Serial.println("setFrequency failed");
-		while (1); // <-- TODO add some outside indicator (like LED or buzzer sequence) in loop, perhase remove this block
+
 		// TODO see what happens in a failed case
+
+		return false;
 	}
 	if (DEBUG) Serial.print("Freq set to: "); Serial.println(RF95_FREQ);
 
@@ -44,4 +49,6 @@ void radioInit(RH_RF95 &rf95) {
 	rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096); // Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+very_long range.
 
 	if (DEBUG) Serial.println("LoRa radio READY.");
+
+	return true;
 }

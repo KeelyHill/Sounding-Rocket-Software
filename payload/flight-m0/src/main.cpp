@@ -192,7 +192,6 @@ void loop() {
 		coder.gps_hour = GPS.hour;
 		coder.gps_min = GPS.minute;
 		coder.gps_sec = GPS.seconds;
-		coder.gps_millis = GPS.milliseconds;  // TODO probably not needed
 		coder.latitude = GPS.latitudeDegrees;
 		coder.longitude = GPS.longitudeDegrees;
 		coder.altitude = GPS.altitude;

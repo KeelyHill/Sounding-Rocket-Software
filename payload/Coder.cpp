@@ -34,7 +34,7 @@ f altimeter altitude
 B gps_hour
 B gps_min
 B gps_sec
-H gps_millis
+~~H gps_millis~~
 f latitude
 f longitude
 f altitude (meters)
@@ -141,7 +141,7 @@ public:
 	uint32_t arduino_millis;
 	float altimeter_alt;
 	uint8_t gps_hour, gps_min, gps_sec;
-	uint16_t gps_millis;
+	// uint16_t gps_millis;
 	float latitude, longitude, altitude;
 	float gps_speed;
 	uint8_t num_sats;
@@ -188,7 +188,7 @@ public:
 		start = encode_to(gps_hour, pkt_ptr, start);
 		start = encode_to(gps_min, pkt_ptr, start);
 		start = encode_to(gps_sec, pkt_ptr, start);
-		start = encode_to(gps_millis, pkt_ptr, start);
+		// start = encode_to(gps_millis, pkt_ptr, start);
 
 		start = encode_to(latitude, pkt_ptr, start);
 		start = encode_to(longitude, pkt_ptr, start);

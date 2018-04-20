@@ -11,11 +11,16 @@ By: Keely Hill
 Copyright (c) 2017 Keely Hill
 """
 
+USE_CURSES = True  # curses is a terminal 'GUI'. False to just print line. Always writes to file.
+
 import serial
 from serial.tools import list_ports
 
 import sys
 import os
+
+if USE_CURSES:
+    import curses
 
 from datetime import datetime
 
@@ -33,8 +38,15 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
     if not os.path.isdir('logs'):
         os.makedirs('logs')
+
     running = True
     with serial.Serial(port, baud) as ser:
+        window = None
+        if USE_CURSES:
+            window = curses.initscr()
+            # right_window = curses.newwin(10, 50, 10, 50)
+            curses.noecho()
+
         date_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         log_file = open('logs/telem-log-%s.csv' % date_string, 'w+')
         log_write_count = 0
@@ -66,10 +78,10 @@ def start_loop(port='/dev/ttyS1', baud=57600):
                 #     times.append(d_t)
 
                 # first 4 bytes is signal strength indicator (rssi) and SNR, include in unpack
-                packet_data = ser.read(4 + TELEM_PACKET_SIZE_RAW) # blocks until all bytes collected
+                packet_data = ser.read(TELEM_PACKET_SIZE) # blocks until all bytes collected
                 # may want to save raw data to disk too
 
-                packet = unpack_telem_packet(packet_data)
+                packet = unpack_telem_packet(packet_data)  # decode and create object
 
                 # save to disk into csv
                 as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'
@@ -84,9 +96,20 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
 
                 # print / update screen
-                print("tx_good: %i   state_bits: %i   altimeter_alt: %f   lat/lon: %i,%i" % (packet.tx_good, packet.state_bits, packet.altimeter_alt, lat, lon))
+                print("tx_good: %i  lat/lon: %i,%i  gps_alt %f altimeter_alt: %f " % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt))
+
+                if not USE_CURSES:
+                    pass
+                else:
+                    update_curses_window(window, packet)
 
         except KeyboardInterrupt:
+
+            if USE_CURSES:
+                curses.nocbreak(); window.keypad(0); curses.echo()
+                curses.endwin()
+
+            print("\nGoodbye.")
             running = False
             log_file.close()
 
@@ -94,17 +117,71 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 def main(argv):
     num_args = len(argv)
 
-    if num_args > 0:
-        if argv[0] == 'list':
-            port_list = list_ports.comports()
-            print("Ports:")
-            [print(' ' + i[0]) for i in port_list]
-        elif num_args >= 2:
-            start_loop(argv[0], argv[1])
+    try:
+
+        if num_args > 0:
+            if argv[0] == 'list':
+                port_list = list_ports.comports()
+                print("Ports:")
+                [print(' ' + i[0]) for i in port_list]
+            elif num_args >= 2:
+                start_loop(argv[0], argv[1])
+            else:
+                start_loop(argv[0])
         else:
-            start_loop(argv[0])
-    else:
-        print("No arguments supplied.")
+            print("No arguments supplied.")
+
+    # generic except to clean up curses window stuff
+    except Exception as e:
+        print(e)
+
+
+        if USE_CURSES:
+            curses.nocbreak(); curses.echo(); curses.endwin()
+
+
+COL2 = 30
+COL3 = 55
+
+def b2Str(theBool):
+    return 'OK' if theBool else 'NO'
+
+def update_curses_window(window, telem_obj):
+    t = telem_obj
+    h, w = window.getmaxyx()
+
+    window.clearok(True)
+    window.addstr(3,2, "Telem Time: %02im:%02is" % divmod((t.arduino_millis/1000),60))
+    window.addstr(4,2, "  GPS Time: %02i:%02i:%02i" % (t.gps_hour, t.gps_min, t.gps_sec))
+    window.addstr(5,2, "   Seq Num: %i" % t.packet_num)
+    window.addstr(6,2, " Last Miss: %i")
+    window.addstr(7,2, "      RSSI: %i" % t.rssi)
+    window.addstr(8,2, "       SNR: %i" % t.snr)
+
+    window.addstr(3,COL2, "Lat: %f" % t.lat)
+    window.addstr(4,COL2, "Lon: %f" % t.lon)
+    window.addstr(5,COL2, "Alt: %f" % t.alt)
+    window.addstr(6,COL2, "BMP: %f" % t.altimeter_alt)
+    window.addstr(7,COL2, "Vel: %f" % t.gps_speed)
+
+    window.addstr(3,COL3, "Status", curses.A_UNDERLINE)
+
+    bmp_okay = state_bit_get(t.state_bits, 0)
+    sd_okay = state_bit_get(t.state_bits, 1)
+    gps_okay = state_bit_get(t.state_bits, 2)
+    gps_lock = state_bit_get(t.state_bits, 3)
+
+    window.addstr(4,COL3, "[%s] GPS Lock" % b2Str(gps_lock))
+    window.addstr(5,COL3, "[%s] GPS" % b2Str(gps_okay))
+    window.addstr(6,COL3, "[%s] BMP" % b2Str(bmp_okay))
+    window.addstr(7,COL3, "[%s] SD Log" % b2Str(sd_okay))
+
+    window.addstr(9,COL3, "Num sats: %i" % t.num_sats)
+
+
+
+    window.addstr(h-1,1, "^C to exit.")
+    window.refresh()
 
 
 if __name__ == "__main__":

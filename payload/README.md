@@ -8,7 +8,8 @@ The flight computer is responsible for reading raw data from all on board sensor
 The Radiohead library is used to communicate over SPI with the radio module. A class ('Coder') was written to encode the many data variables to a 'uint8_t' array.
 
 ## Telemetry packet structure
-
+A telemetry packet is just a concatenated byte string of the telemetry values in their binary (big-endian) format.
+A list is located `Coder.cpp` and `decode.py`.
 
 ## Directory structure
 
@@ -22,10 +23,18 @@ The Radiohead library is used to communicate over SPI with the radio module. A c
 - `M0 LoRa Send Recive test/`: Contains code for testing the sender and receiver (notably range).
 
 ## Ground forwarder USB protocol
-The ground reciver forwards recived packets over USB-serial. Because our telemetry packet size is fixed length, no extra length header is needed. By default, the microcontroller reboots (TODO test this for the FeatherM0) so no synchronizing is needed. The first 4 bytes are signal strength (RSSI) and signal-to-noise ratio (SNR), followed by fixed length raw telemetry data (`serial_read_length = fixed_telemetry_length + 2`).
+The ground reciver forwards recived packets over USB-serial. Because our telemetry packet size is fixed length, no extra length header is needed. By default, the microcontroller reboots (TODO test this for the FeatherM0) so no synchronizing is needed. The first 4 bytes are signal strength (RSSI) and signal-to-noise ratio (SNR), followed by fixed length raw telemetry data (`serial_read_length = raw_telemetry_length + 4`).
 
 `[2 bytes RSSI][2 bytes SNR][telem-packet-len: raw data]`
 
+## Preflight checklist
+- Plug in ground station.
+- Discover serial port: `$ ./Ground.py list`
+- Start ground station program
+	- `$ ./Ground.py /dev/xxx`
+- Turn on flight computer (_may_ be done before ground).
+- Ensure the status led is not rapidly blinking (several times a second).
+- Check for good reception and statuses in ground program.
 
 # Building
 (Assumes PlatformIO is installed on the system. See Makefile for details.)

@@ -52,3 +52,13 @@ bool radioInit(RH_RF95 &rf95) {
 
 	return true;
 }
+
+/** Print bytes as their hex representation (in ASCII) */
+void printlnRawBytes(uint8_t *bytes, size_t* len) {
+	for (size_t i=0; i<*len; i++) {
+		Serial.print("\\x");
+		Serial.print(bytes[i] < 16 ? "0" : "");
+		Serial.print(bytes[i], HEX);
+	}
+	Serial.println("\n");
+}

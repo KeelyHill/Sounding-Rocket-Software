@@ -271,13 +271,3 @@ void GPSDebugPrint() {
 		Serial.println();
 	}
 }
-
-void printlnRawBytes(uint8_t *bytes, size_t* len) {
-	for (size_t i=0; i<*len; i++) {
-		Serial.print("\\x");
-		Serial.print(bytes[i] < 16 ? "0" : "");
-		Serial.print(bytes[i], HEX);
-	}
-	Serial.println("\n");
-
-}

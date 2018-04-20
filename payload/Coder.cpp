@@ -63,7 +63,7 @@ bit(from lsb) | name
 #ifndef CODER_CPP
 #define CODER_CPP
 
-#define TELEM_PACKET_SIZE 37 // bytes TODO recalc to check add 1 if doing checksum 63
+#define TELEM_PACKET_SIZE 35 // bytes TODO recalc to check add 1 if doing checksum 63
 
 #define BIT(x) (0x01 << (x))
 #define bit_write(cond,var,b) (cond ? (var) |= (b) : (var) &= ~(b)) // bit_write(bool, variable, BIT(b))

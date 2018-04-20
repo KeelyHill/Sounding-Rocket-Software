@@ -3,7 +3,7 @@ from collections import namedtuple
 from struct import unpack, Struct
 
 # in bytes
-TELEM_PACKET_SIZE_RAW = 37  # run file as main to auto-calculate
+TELEM_PACKET_SIZE_RAW = 35  # run file as main to auto-calculate
 TELEM_PACKET_SIZE = TELEM_PACKET_SIZE_RAW + 4
 
 telem_packet_struct_format = "!hhIBLfBBBffffBH"

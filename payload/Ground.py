@@ -69,13 +69,9 @@ def start_loop(port='/dev/ttyS1', baud=57600):
                 #     if len(buf) > 3:
                 #         buf = buf[-3:]
 
-                # # get delta time between packets to calculate bps (wip)
-                # if last_time == None:
-                #     last_time = time.now()
-                # else:
-                #     d_t = time.now() - last_time
-                #     last_time = time.now()
-                #     times.append(d_t)
+
+                if last_time is None:
+                    last_time = datetime.now()
 
                 # first 4 bytes is signal strength indicator (rssi) and SNR, include in unpack
                 packet_data = ser.read(TELEM_PACKET_SIZE) # blocks until all bytes collected
@@ -96,12 +92,12 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
 
                 # print / update screen
-                print("tx_good: %i  lat/lon: %i,%i  gps_alt %f altimeter_alt: %f " % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt))
-
                 if not USE_CURSES:
-                    pass
+                    print("tx_good: %i  lat/lon: %.4f,%.4f  gps_alt %.3f altimeter_alt: %.3f " % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt))
                 else:
-                    update_curses_window(window, packet)
+                    update_curses_window(window, packet, datetime.now() - last_time)
+
+                last_time = datetime.now()
 
         except KeyboardInterrupt:
 
@@ -135,7 +131,6 @@ def main(argv):
     except Exception as e:
         print(e)
 
-
         if USE_CURSES:
             curses.nocbreak(); curses.echo(); curses.endwin()
 
@@ -146,7 +141,7 @@ COL3 = 55
 def b2Str(theBool):
     return 'OK' if theBool else 'NO'
 
-def update_curses_window(window, telem_obj):
+def update_curses_window(window, telem_obj, delta_time_recv):
     t = telem_obj
     h, w = window.getmaxyx()
 
@@ -154,16 +149,20 @@ def update_curses_window(window, telem_obj):
     window.addstr(3,2, "Telem Time: %02im:%02is" % divmod((t.arduino_millis/1000),60))
     window.addstr(4,2, "  GPS Time: %02i:%02i:%02i" % (t.gps_hour, t.gps_min, t.gps_sec))
     window.addstr(5,2, "   Seq Num: %i" % t.packet_num)
-    window.addstr(6,2, " Last Miss: %i")
+    window.addstr(6,2, "   dT Recv: %ss" % (delta_time_recv.seconds))
     window.addstr(7,2, "      RSSI: %i" % t.rssi)
     window.addstr(8,2, "       SNR: %i" % t.snr)
 
-    window.addstr(3,COL2, "Lat: %f" % t.lat)
-    window.addstr(4,COL2, "Lon: %f" % t.lon)
-    window.addstr(5,COL2, "Alt: %f" % t.alt)
-    window.addstr(6,COL2, "BMP: %f" % t.altimeter_alt)
-    window.addstr(7,COL2, "Vel: %f" % t.gps_speed)
+    ###
+    window.addstr(3,COL2, "Lat: %.4f" % t.lat)
+    window.addstr(4,COL2, "Lon: %.4f" % t.lon)
+    window.addstr(5,COL2, "Alt: %.2f m" % t.alt)
+    window.addstr(6,COL2, "BMP: %.2f" % t.altimeter_alt)
+    window.addstr(7,COL2, "Vel: %.2f knots" % t.gps_speed)
+    window.addstr(8,COL2, "Vel: %.2f m/s" % (t.gps_speed * 0.514444))
 
+
+    ###
     window.addstr(3,COL3, "Status", curses.A_UNDERLINE)
 
     bmp_okay = state_bit_get(t.state_bits, 0)
@@ -176,11 +175,10 @@ def update_curses_window(window, telem_obj):
     window.addstr(6,COL3, "[%s] BMP" % b2Str(bmp_okay))
     window.addstr(7,COL3, "[%s] SD Log" % b2Str(sd_okay))
 
-    window.addstr(9,COL3, "Num sats: %i" % t.num_sats)
+    window.addstr(9,COL3, "%i GPS Sats" % t.num_sats)
 
 
-
-    window.addstr(h-1,1, "^C to exit.")
+    window.addstr(h-1,1, "^C to exit. Screen updates on new reception.")
     window.refresh()
 
 

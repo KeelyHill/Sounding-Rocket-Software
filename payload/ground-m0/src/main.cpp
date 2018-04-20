@@ -22,14 +22,14 @@ void setup() {
 
 	Serial.begin(57600);
 
-	common_radio_setup();
+	commonRadioSetup();
 	radioInit(rf95);
 
 	// Serial.print("***");
 }
 
-uint8_t recv_buf[RH_RF95_MAX_MESSAGE_LEN];
-uint8_t recv_len = sizeof(recv_buf);
+uint8_t recvBuf[RH_RF95_MAX_MESSAGE_LEN];
+uint8_t recvLen = sizeof(recvBuf);
 uint8_t rssiAndSNR[4];
 
 void loop() {
@@ -37,7 +37,7 @@ void loop() {
 
 		digitalWrite(STATUS_LED_PIN, HIGH);
 
-		if (rf95.recv(recv_buf, &recv_len)) {
+		if (rf95.recv(recvBuf, &recvLen)) {
 
 			// TODO check packet len consistant with telem packet len (otherwise fail state)
 
@@ -50,7 +50,7 @@ void loop() {
 			rssiAndSNR[3] = snr;
 
 			Serial.write(rssiAndSNR, 4);
-			Serial.write(recv_buf, recv_len);
+			Serial.write(recvBuf, recvLen);
 
 		} else { // receive failed
 			// TODO maybe send all 0's as indicator?

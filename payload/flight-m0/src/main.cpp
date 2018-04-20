@@ -24,6 +24,8 @@ main.cpp
 #define SPI_MISO 22
 #define SPI_MOSI 23
 
+#define VBATPIN A7 // pin used on Feather for reading battery voltage
+
 #define GPSSerial Serial1
 
 #define STATUS_LED LED_BUILTIN
@@ -34,10 +36,12 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 // Status bools
 bool alt_okay, gps_okay;
 
-Coder coder;
-uint8_t * to_send;
-size_t len_to_send;
+// telemetry
+Coder coder; // TODO maybe have 2, one for saving, one for sending
+uint8_t * bytes_to_send;
+size_t len_bytes_to_send;
 
+// devices
 Logger logger;
 IMU imu;
 Adafruit_BMP280 bme(SS_ALT); //hardware SPI //, SPI_MOSI, SPI_MISO, SPI_SCK);
@@ -69,7 +73,7 @@ void setup() {
 
 	// radio setup and init
 
-	common_radio_setup();
+	commonRadioSetup();
 	bool radioInitSuccess = radioInit(rf95);
 	digitalWrite(STATUS_LED, !radioInitSuccess); // on if failed to init
 
@@ -155,7 +159,7 @@ void loop() {
 		char * lastNMEA = GPS.lastNMEA();
 
 		// Serial.print("RAW:");
-		// Serial.println(lastNMEA); Serial.println("---");
+		// Serial.println(lastNMEA);
 		// if ((lastNMEA[3] == 'G' && lastNMEA[4] == 'G' && lastNMEA[5] == 'A') || (lastNMEA[3] == 'R' && lastNMEA[4] == 'M' && lastNMEA[5] == 'C')) {
 		if (lastNMEA[5] == 'G'|| lastNMEA[5] == 'M') {
 			bool parseOkay = GPS.parse(lastNMEA);  // this also sets the newNMEAreceived() flag to false
@@ -201,16 +205,16 @@ void loop() {
 
 	coder.tx_good = rf95.txGood(); // uint16_t total _sent_ packets can use to calc sent/received ratio
 
-	coder.encode_telem(&to_send, &len_to_send);
+	coder.encode_telem(&bytes_to_send, &len_bytes_to_send);
 
 	/* Log then Transmit if radio open */
 
 	if (DEBUG) {
-		printlnRawBytes(to_send, &len_to_send);
+		printlnRawBytes(bytes_to_send, &len_bytes_to_send);
 		delay(100);
 	}
 
-	// logger.log(to_send, &len_to_send);
+	// logger.log(bytes_to_send, &len_bytes_to_send);
 
 	// transmitTelemIfRadioAvaliable();
 }
@@ -222,7 +226,7 @@ void transmitTelemIfRadioAvaliable() {
 		// TODO IF this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
 		if (DEBUG) Serial.println("START telemetry transmission."); // TODO test
 
-		rf95.send(to_send, len_to_send);
+		rf95.send(bytes_to_send, len_bytes_to_send);
 	}
 }
 
@@ -241,6 +245,15 @@ void pullSlavesHighAndInit() {
 	digitalWrite(SS_SD, HIGH);
 
 	delay(1);
+}
+
+/* For debug prints of sensors. */
+void generalDebugPrint() {
+	if (DEBUG) {
+		Serial.print("Pressure:");
+		Serial.println(bme.readPressure());
+		// GPSDebugPrint();
+	}
 }
 
 void GPSDebugPrint() {

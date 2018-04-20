@@ -9,7 +9,7 @@
 
 #define RF95_FREQ 915.0
 
-void common_radio_setup() {
+void commonRadioSetup() {
 
 	pinMode(RFM95_RST, OUTPUT);
 	digitalWrite(RFM95_RST, HIGH);

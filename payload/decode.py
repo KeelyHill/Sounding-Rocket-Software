@@ -10,7 +10,7 @@ telem_packet_struct_format = "!hhIBLfBBBffffBH"
 telem_packet_struct_raw_format = '!' + telem_packet_struct_format[3:]
 
 telem_tuple_builder_raw = 'packet_num state_bits arduino_millis altimeter_alt gps_hour gps_min gps_sec lat lon alt gps_speed num_sats tx_good'
-telem_tuple_builder = 'rssi snr ' + telem_tuple_builder_raw
+telem_tuple_builder = 'rssi snr ' + telem_tuple_builder_raw # raw does not include rssi and snr
 
 TelemPacket = namedtuple('TelemPacket', telem_tuple_builder) # forwared from reciver, includes rssi & snr
 TelemPacketRaw = namedtuple('TelemPacketRaw', telem_tuple_builder_raw) # raw written to sd (what is actually transmitted)

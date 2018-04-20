@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ Ground.py
 
 Usage:
@@ -25,6 +26,13 @@ LOG_FILE_FLUSH_COUNT = 20
 
 def start_loop(port='/dev/ttyS1', baud=57600):
 
+    port_list = list_ports.comports()
+    if port not in [i[0] for i in port_list]:
+        print("'%s' is not an avaliable port" % port)
+        return
+
+    if not os.path.isdir('logs'):
+        os.makedirs('logs')
     running = True
     with serial.Serial(port, baud) as ser:
         date_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

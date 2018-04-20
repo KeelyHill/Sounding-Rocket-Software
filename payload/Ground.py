@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """ Ground.py
 
+Listens on a serial port for the raw bytes of telemetry packets,
+converts them to readable values, logs to a CSV file, and displays on screen.
+
 Usage:
 $ python3 Ground.py list  # list ports
 $ python3 Ground.py /dev/[portx] (baud rate)
 
+Set `USE_CURSES` to false to turn off the "termial GUI".
+
 By: Keely Hill
 17 Nov 2017
 
-Copyright (c) 2017 Keely Hill
+Copyright (c) 2017, 2018 Keely Hill
 """
 
 USE_CURSES = True  # curses is a terminal 'GUI'. False to just print line. Always writes to file.
@@ -41,6 +46,9 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
     running = True
     with serial.Serial(port, baud) as ser:
+        print("Running and connected to ground station hardware.")
+        print("Awaiting first signal...")
+
         window = None
         if USE_CURSES:
             window = curses.initscr()

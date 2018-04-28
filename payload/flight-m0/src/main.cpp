@@ -215,12 +215,7 @@ void pseudo_thread_main_check() {
 	coder.encode_telem(&bytes_to_send, &len_bytes_to_send);
 
 	/* Log then Transmit if radio open */
-
-	if (DEBUG) {
-		printlnRawBytes(bytes_to_send, &len_bytes_to_send);
-		delay(100);
-	}
-
+	
 	// logger.log(bytes_to_send, &len_bytes_to_send);
 
 	transmitTelemIfRadioAvaliable();

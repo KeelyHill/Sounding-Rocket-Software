@@ -15,6 +15,8 @@ main.cpp
 #include "Logger.cpp"
 #include "IMU.cpp"
 
+#include "InteruptTimer.hpp"
+
 #define SS_ALT 11
 #define SS_ACCEL 12
 #define SS_SD 13
@@ -35,6 +37,8 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // Status bools
 bool alt_okay, gps_okay;
+bool lowBattery = false;
+bool radioInitSuccess;
 
 // telemetry
 Coder coder; // TODO maybe have 2, one for saving, one for sending
@@ -55,7 +59,12 @@ void useInterruptForGPS(boolean); // proto
 void pullSlavesHighAndInit();
 void GPSDebugPrint();
 void printlnRawBytes(uint8_t *bytes, size_t* len);
+void transmitTelemIfRadioAvaliable();
+void interuptTimerCallback() {
 
+	GPS.read(); //char c = GPS.read();
+
+}
 
 void setup() {
 
@@ -66,6 +75,7 @@ void setup() {
 	}
 
 	pinMode(STATUS_LED, OUTPUT);
+	digitalWrite(STATUS_LED, HIGH); // on if failed to init
 
 	Serial.println("Flight M0 start up");
 
@@ -74,7 +84,7 @@ void setup() {
 	// radio setup and init
 
 	commonRadioSetup();
-	bool radioInitSuccess = radioInit(rf95);
+	radioInitSuccess = radioInit(rf95);
 	digitalWrite(STATUS_LED, !radioInitSuccess); // on if failed to init
 
 
@@ -94,6 +104,8 @@ void setup() {
 	#else
 	 	useInterruptForGPS(true);
 	#endif
+
+	startTimer(1000);
 
 	// Other sensor setup
 
@@ -142,19 +154,10 @@ void setup() {
 
 #endif //#ifdef__AVR__
 
-uint32_t timer_2sec = millis();
+uint32_t ptimer_10sec = millis(); // pseudo timer 'thread'
+uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next oppertunity'
 
-void loop() {
-
-	// 'hand query' the GPS, not suggested :(
-	if (! usingInterruptForGPS) {
-		// read data from the GPS in the 'main loop'
-		char c = GPS.read();
-		if (DEBUG && DEBUG_GPS_RAW)
-			if (c) Serial.print(c);
-	}
-
-
+void pseudo_thread_main_check() {
 	if (GPS.newNMEAreceived()) {
 		char * lastNMEA = GPS.lastNMEA();
 
@@ -170,27 +173,18 @@ void loop() {
 				GPSDebugPrint();
 			else if (DEBUG) Serial.println("GPS Parse Failed.");
 		}
-  	}
-
-	/* Sample 9DOF and update internal orientation filter. */
-	imu.sample();
-	float roll = imu.filter.getRoll();
-	float pitch = imu.filter.getPitch();
-	float yaw = imu.filter.getYaw();
-
-	// imu.debugPrint();
-	// imu.calibrationPrint();
+	}
 
 	// generalDebugPrint();
 
-	if (millis() - timer_2sec > 2000) { // every two seconds
-		timer_2sec = millis(); // not used at the moment
-	}
-
 	/* Set telemetry variables in the coder */
 	coder.arduino_millis = millis();
-	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
-	coder.altimeter_alt = bme.readPressure(); // TODO, pressure for now, so we can calc post flight. bme.readAltitude(1010.82)
+	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix); // TODO alt okay (first arg)
+
+	ATOMIC_BLOCK_START; // needed for some reason, readPressure /sometimes/ freezes system when radio is doing stuff
+	coder.altimeter_alt = bme.readPressure();  // TODO, pressure for now, so we can calc post flight. bme.readAltitude(1010.82)
+	ATOMIC_BLOCK_END;
+
 
 	if (GPS.fix) {
 		coder.gps_hour = GPS.hour;
@@ -216,9 +210,44 @@ void loop() {
 
 	// logger.log(bytes_to_send, &len_bytes_to_send);
 
-	// transmitTelemIfRadioAvaliable();
+	transmitTelemIfRadioAvaliable();
 }
 
+void loop() {
+
+	// 'hand query' the GPS, not suggested :( ///////// using InteruptTimer now (works with M0)
+	// if (! usingInterruptForGPS) {
+	// 	// read data from the GPS in the 'main loop'
+	// 	char c = GPS.read();
+	// 	if (DEBUG && DEBUG_GPS_RAW)
+	// 		if (c) Serial.print(c);
+	// }
+
+	/* Sample 9DOF and update internal orientation filter. */
+	// imu.sample();
+	// float roll = imu.filter.getRoll();
+	// float pitch = imu.filter.getPitch();
+	// float yaw = imu.filter.getYaw();
+
+	// imu.debugPrint();
+	// imu.calibrationPrint();
+
+	if (millis() - ptimer_100ms > 100) { // every 100 millis (lazy execute)
+		ptimer_100ms = millis();
+
+		pseudo_thread_main_check();
+	}
+
+	if (millis() - ptimer_10sec > 10000) { // every 10 seconds
+		ptimer_10sec = millis();
+
+		float measuredvbat = analogRead(VBATPIN);
+		measuredvbat *= 6.6;    // divided by 2 * 3.3V, so multiply back and * reference voltage
+		measuredvbat /= 1024; // convert to voltage
+
+		lowBattery = measuredvbat < 3.4;  // 3.2V is when protection circuitry kicks in
+	}
+}
 /* Only queue/send the packet if not in the middle of transmitting. Returns immediately. */
 void transmitTelemIfRadioAvaliable() {
 	// if not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
@@ -237,9 +266,6 @@ void pullSlavesHighAndInit() {
 
 	pinMode(SS_ALT, OUTPUT);
 	digitalWrite(SS_ALT, HIGH);
-
-	pinMode(SS_ACCEL, OUTPUT);
-	digitalWrite(SS_ACCEL, HIGH);
 
 	pinMode(SS_SD, OUTPUT);
 	digitalWrite(SS_SD, HIGH);

@@ -11,6 +11,9 @@ flight:
 flight-upload:
 	cd flight-m0/ && source ~/.platformio/penv/bin/activate && pio run --target upload
 
+flight-clean:
+	cd flight-m0/ && source ~/.platformio/penv/bin/activate && pio run --target clean
+
 ground:
 	cd ground-m0/ && source ~/.platformio/penv/bin/activate && pio run
 

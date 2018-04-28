@@ -101,7 +101,8 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
                 # print / update screen
                 if not USE_CURSES:
-                    print("tx_good: %i  lat/lon: %.4f,%.4f  gps_alt %.3f altimeter_alt: %.3f " % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt))
+                    telem_time_str = "Telem Time: %02im:%02is" % divmod((t.arduino_millis/1000),60)
+                    print("tx_good: %i  lat/lon: %.4f,%.4f  gps_alt %.3f altimeter_alt: %.3f  flight time: %s" % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt, telem_time_str))
                 else:
                     update_curses_window(window, packet, datetime.now() - last_time)
 

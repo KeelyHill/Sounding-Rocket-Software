@@ -154,10 +154,10 @@ public:
 	/** Sets bit flags in state uint */
 	void setStateFlags(bool &alt_okay, bool &sd_okay, bool &gps_okay, bool &gps_lock) {
 		// can add up to 8 flags with current uint8
-		bit_write(alt_okay, payload_state_bits, 0);
-		bit_write(sd_okay, payload_state_bits, 1);
-		bit_write(gps_okay, payload_state_bits, 2);
-		bit_write(gps_lock, payload_state_bits, 3);
+		bit_write(alt_okay, payload_state_bits, BIT(0));
+		bit_write(sd_okay, payload_state_bits, BIT(1));
+		bit_write(gps_okay, payload_state_bits, BIT(2));
+		bit_write(gps_lock, payload_state_bits, BIT(3));
 	}
 
 	/** Creates a telemetry packet based on instance data.

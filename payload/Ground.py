@@ -157,9 +157,11 @@ def update_curses_window(window, telem_obj, delta_time_recv):
     window.addstr(3,2, "Telem Time: %02im:%02is" % divmod((t.arduino_millis/1000),60))
     window.addstr(4,2, "  GPS Time: %02i:%02i:%02i" % (t.gps_hour, t.gps_min, t.gps_sec))
     window.addstr(5,2, "   Seq Num: %i" % t.packet_num)
-    window.addstr(6,2, "   dT Recv: %ss" % (delta_time_recv.seconds))
-    window.addstr(7,2, "      RSSI: %i" % t.rssi)
-    window.addstr(8,2, "       SNR: %i" % t.snr)
+    window.addstr(6,2, "                             ")
+    window.addstr(6,2, "   TX Good: %s" % (t.tx_good))
+    window.addstr(7,2, "   dT Recv: %ss" % (delta_time_recv.seconds))
+    window.addstr(8,2, "      RSSI: %i" % t.rssi)
+    window.addstr(9,2, "       SNR: %i" % t.snr)
 
     ###
     window.addstr(3,COL2, "Lat: %.4f" % t.lat)

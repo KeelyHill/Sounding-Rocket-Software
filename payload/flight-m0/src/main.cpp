@@ -60,10 +60,23 @@ void pullSlavesHighAndInit();
 void GPSDebugPrint();
 void printlnRawBytes(uint8_t *bytes, size_t* len);
 void transmitTelemIfRadioAvaliable();
+
+
 void interuptTimerCallback() {
-
 	GPS.read(); //char c = GPS.read();
+}
 
+
+// Unused, here for reference
+int statusLEDCounter = 0;
+void statusLEDUpdate() {
+	if (radioInitSuccess) { // slow blink
+		statusLEDCounter = statusLEDCounter > 7 ? 0 : statusLEDCounter+1;
+		digitalWrite(STATUS_LED, !statusLEDCounter);
+	} else { // rapid blink if failed
+		statusLEDCounter = !statusLEDCounter;
+		digitalWrite(STATUS_LED, statusLEDCounter);
+	}
 }
 
 void setup() {

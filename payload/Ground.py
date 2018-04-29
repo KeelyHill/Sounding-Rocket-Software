@@ -32,7 +32,7 @@ from datetime import datetime
 from decode import *
 
 # how many records need to be written, before commiting to disk
-LOG_FILE_FLUSH_COUNT = 20
+LOG_FILE_FLUSH_COUNT = 10
 
 def start_loop(port='/dev/ttyS1', baud=57600):
 
@@ -101,8 +101,8 @@ def start_loop(port='/dev/ttyS1', baud=57600):
 
                 # print / update screen
                 if not USE_CURSES:
-                    telem_time_str = "Telem Time: %02im:%02is" % divmod((t.arduino_millis/1000),60)
-                    print("tx_good: %i  lat/lon: %.4f,%.4f  gps_alt %.3f altimeter_alt: %.3f  flight time: %s" % (packet.tx_good, packet.lat, packet.lon, packet.alt, packet.altimeter_alt, telem_time_str))
+                    telem_time_str = "%02im:%02is" % divmod((packet.arduino_millis/1000),60)
+                    print("RSSI: %i| lat/lon: %.6f  %.6f | gps_alt %.0f m  altimeter: %.2f | tx_good %i dur: %s" % (packet.rssi, packet.lat, packet.lon, packet.alt, packet.altimeter_alt, packet.tx_good, telem_time_str))
                 else:
                     update_curses_window(window, packet, datetime.now() - last_time)
 
@@ -128,13 +128,15 @@ def main(argv):
             if argv[0] == 'list':
                 port_list = list_ports.comports()
                 print("Ports:")
-                [print(' ' + i[0]) for i in port_list]
+                for i in port_list:
+                    print(' ' + i[0])
+
             elif num_args >= 2:
                 start_loop(argv[0], argv[1])
             else:
                 start_loop(argv[0])
         else:
-            print("No arguments supplied.")
+            print("No arguments supplied.\n /dev/[portx] (baud rate) \n list")
 
     # generic except to clean up curses window stuff
     except Exception as e:
@@ -165,8 +167,8 @@ def update_curses_window(window, telem_obj, delta_time_recv):
     window.addstr(9,2, "       SNR: %i" % t.snr)
 
     ###
-    window.addstr(3,COL2, "Lat: %.4f" % t.lat)
-    window.addstr(4,COL2, "Lon: %.4f" % t.lon)
+    window.addstr(3,COL2, "Lat: %.6f" % t.lat)
+    window.addstr(4,COL2, "Lon: %.6f" % t.lon)
     window.addstr(5,COL2, "Alt: %.2f m" % t.alt)
     window.addstr(6,COL2, "BMP: %.2f" % t.altimeter_alt)
     window.addstr(7,COL2, "Vel: %.2f knots" % t.gps_speed)

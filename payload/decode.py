@@ -17,11 +17,11 @@ TelemPacketRaw = namedtuple('TelemPacketRaw', telem_tuple_builder_raw) # raw wri
 
 
 """Returns TelemPacket object (namedtuple). """
-def unpack_telem_packet(data:bytes):
+def unpack_telem_packet(data):
     return TelemPacket._make(unpack(telem_packet_struct_format, data))
 
 """Unpacks struct of raw telemetry packet written to flight SD card"""
-def unpack_raw_log_packet(data:bytes):
+def unpack_raw_log_packet(data):
     return TelemPacketRaw._make(unpack(telem_packet_struct_raw_format, data))
 
 def state_bit_get(state_bits_int, num_bit):

@@ -17,9 +17,8 @@ main.cpp
 
 #include "InteruptTimer.hpp"
 
-#define SS_ALT 11
-#define SS_ACCEL 12
-#define SS_SD 13
+#define SS_BMP 11
+#define SS_SD 12
 
 // SPI control pins are correct
 #define SPI_SCK 24
@@ -48,7 +47,7 @@ size_t len_bytes_to_send;
 // devices
 Logger logger;
 IMU imu;
-Adafruit_BMP280 bme(SS_ALT); //hardware SPI //, SPI_MOSI, SPI_MISO, SPI_SCK);
+Adafruit_BMP280 bme(SS_BMP); //hardware SPI //, SPI_MOSI, SPI_MISO, SPI_SCK);
 
 Adafruit_GPS GPS(&GPSSerial);
 bool usingInterruptForGPS = false;
@@ -272,8 +271,8 @@ void pullSlavesHighAndInit() {
 	pinMode(RFM95_CS, OUTPUT);
 	digitalWrite(RFM95_CS, HIGH); // TODO test to ensure RadioHead pulls to low when trying to talk to the LoRa.
 
-	pinMode(SS_ALT, OUTPUT);
-	digitalWrite(SS_ALT, HIGH);
+	pinMode(SS_BMP, OUTPUT);
+	digitalWrite(SS_BMP, HIGH);
 
 	pinMode(SS_SD, OUTPUT);
 	digitalWrite(SS_SD, HIGH);

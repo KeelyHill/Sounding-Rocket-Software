@@ -23,12 +23,12 @@ def decode_raw_file_to_csv(file_name):
     out_file.write(csv_header)
 
     while True: # read in chunks of raw packet length
-        raw_packet = in_file.read(TELEM_PACKET_SIZE)
+        raw_packet = in_file.read(TELEM_PACKET_SIZE_RAW)
         if not raw_packet:
             break
 
         try:
-            packet = unpack_sd_log_packet(raw_packet)
+            packet = unpack_raw_log_packet(raw_packet)
             as_csv_row = ','.join([str(v) for v in list(packet)]) + '\n'
             out_file.write(as_csv_row)
         except struct_error as e:

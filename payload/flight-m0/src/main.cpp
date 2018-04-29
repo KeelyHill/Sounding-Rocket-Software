@@ -35,7 +35,7 @@ main.cpp
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // Status bools
-bool alt_okay, gps_okay;
+bool bmp_okay, gps_okay;
 bool lowBattery = false;
 bool radioInitSuccess;
 
@@ -57,6 +57,7 @@ void useInterruptForGPS(boolean); // proto
 // helper prototypes
 void pullSlavesHighAndInit();
 void GPSDebugPrint();
+void generalDebugPrint();
 void printlnRawBytes(uint8_t *bytes, size_t* len);
 void transmitTelemIfRadioAvaliable();
 
@@ -166,6 +167,12 @@ void setup() {
 
 #endif //#ifdef__AVR__
 
+// TODO not used at the moment
+float readSelfCalibratedAltitude() {
+	static float seaLevel_hP = bme.readPressure() / 100; // read once on first call
+ 	return bme.readAltitude(seaLevel_hP);
+}
+
 uint32_t ptimer_10sec = millis(); // pseudo timer 'thread'
 uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next oppertunity'
 
@@ -191,11 +198,13 @@ void pseudo_thread_main_check() {
 
 	/* Set telemetry variables in the coder */
 	coder.arduino_millis = millis();
-	coder.setStateFlags(logger.sdOkay, logger.sdOkay, gps_okay, (bool &)GPS.fix); // TODO alt okay (first arg)
+	coder.setStateFlags(bmp_okay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
 
 	ATOMIC_BLOCK_START; // needed for some reason, readPressure /sometimes/ freezes system when radio is doing stuff
-	coder.altimeter_alt = bme.readPressure();  // TODO, pressure for now, so we can calc post flight. bme.readAltitude(1010.82)
+	coder.altimeter_alt = bme.readPressure() / 100; //TODO pressure for now, awaiting proper wiring for readSelfCalibratedAltitude();
 	ATOMIC_BLOCK_END;
+
+	generalDebugPrint();
 
 
 	if (GPS.fix) {
@@ -214,7 +223,7 @@ void pseudo_thread_main_check() {
 	coder.encode_telem(&bytes_to_send, &len_bytes_to_send);
 
 	/* Log then Transmit if radio open */
-	
+
 	// logger.log(bytes_to_send, &len_bytes_to_send);
 
 	transmitTelemIfRadioAvaliable();
@@ -283,8 +292,10 @@ void pullSlavesHighAndInit() {
 /* For debug prints of sensors. */
 void generalDebugPrint() {
 	if (DEBUG) {
-		Serial.print("Pressure:");
-		Serial.println(bme.readPressure());
+		Serial.print("Pressure (hP):");
+		Serial.println(bme.readPressure() / 100);
+		Serial.print("Calibrated Alt (m):");
+		Serial.println(readSelfCalibratedAltitude());
 		// GPSDebugPrint();
 	}
 }

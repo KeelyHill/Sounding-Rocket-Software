@@ -3,6 +3,11 @@ main.cpp
 
 */
 
+
+#ifndef __arm__
+#warning "This code was written to work with the ARM Cortex M0 -- GPS reading interupt will not fire."
+#endif
+
 #include "global.h"
 
 #include <Arduino.h>
@@ -20,24 +25,25 @@ main.cpp
 #define SS_BMP 11
 #define SS_SD 12
 
+#define GPSSerial Serial1
+
+#define STATUS_LED LED_BUILTIN
+
+#define VBATPIN A7 // pin used on Feather for reading battery voltage
+
 // SPI control pins are correct
 #define SPI_SCK 24
 #define SPI_MISO 22
 #define SPI_MOSI 23
 
-#define VBATPIN A7 // pin used on Feather for reading battery voltage
-
-#define GPSSerial Serial1
-
-#define STATUS_LED LED_BUILTIN
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // Status bools
 bool bmp_okay, gps_okay;
-bool lowBattery = false;
 bool radioInitSuccess;
+bool lowBattery = false;
 
 // telemetry
 Coder coder; // TODO maybe have 2, one for saving, one for sending
@@ -50,18 +56,15 @@ IMU imu;
 Adafruit_BMP280 bme(SS_BMP); //hardware SPI //, SPI_MOSI, SPI_MISO, SPI_SCK);
 
 Adafruit_GPS GPS(&GPSSerial);
-bool usingInterruptForGPS = false;
-void useInterruptForGPS(boolean); // proto
 
 
-// helper prototypes
+// prototypes
+void transmitTelemIfRadioAvaliable();
 void pullSlavesHighAndInit();
 void GPSDebugPrint();
 void generalDebugPrint();
-void printlnRawBytes(uint8_t *bytes, size_t* len);
-void transmitTelemIfRadioAvaliable();
 
-
+// For constant reading of GPS serial data (as recommended)
 void interuptTimerCallback() {
 	GPS.read(); //char c = GPS.read();
 }
@@ -81,11 +84,11 @@ void statusLEDUpdate() {
 
 void setup() {
 
-	if (DEBUG) {
-		while (!Serial);
-		Serial.begin(115200);
-		delay(100);
-	}
+	// if (DEBUG) {
+	// 	while (!Serial);
+	// 	Serial.begin(115200);
+	// 	delay(100);
+	// }
 
 	pinMode(STATUS_LED, OUTPUT);
 	digitalWrite(STATUS_LED, HIGH); // on if failed to init
@@ -101,7 +104,7 @@ void setup() {
 	digitalWrite(STATUS_LED, !radioInitSuccess); // on if failed to init
 
 
-	// GPS setup
+	/* GPS setup */
 
 	GPS.begin(9600);
 	GPSSerial.begin(9600);
@@ -112,15 +115,11 @@ void setup() {
 	// Request updates on antenna status, comment out to keep quiet
 	// GPS.sendCommand(PGCMD_ANTENNA);
 
-	#ifdef __arm__
-		usingInterruptForGPS = false;  //NOTE - we don't want to use interrupts on the Due
-	#else
-	 	useInterruptForGPS(true);
-	#endif
+	// starts GPS serial read interupt timer
+	startTimer(1000);  // 1000 Hz
 
-	startTimer(1000);
+	/* Other sensor setup */
 
-	// Other sensor setup
 
 	while (!bme.begin()) {
 		Serial.println("Could not find a valid BMP280 sensor, check wiring!");
@@ -136,36 +135,7 @@ void setup() {
 	Serial.println("Setup done.");
 }
 
-#ifdef __AVR__
 
-	// This interrupt is (auto) called once a millisecond, looks for any new GPS data, and stores it
-	SIGNAL(TIMER0_COMPA_vect) {
-		char c = GPS.read(); // TODO test what happens when this is removed
-
-
-		#ifdef UDR0
-			if (DEBUG)
-				if (c) UDR0 = c;
-				// writing direct to UDR0 is much much faster than Serial.print
-				// but only one character can be written at a time.
-		#endif
-	}
-
-	void useInterruptForGPS(boolean v) {
-		if (v) {
-			// Timer0 is already used for millis() - we'll just interrupt somewhere
-			// in the middle and call the "Compare A" function above
-			OCR0A = 0xAF;
-			TIMSK0 |= _BV(OCIE0A);
-			usingInterruptForGPS = true;
-		} else {
-			// do not call the interrupt function COMPA anymore
-			TIMSK0 &= ~_BV(OCIE0A);
-			usingInterruptForGPS = false;
-		}
-	}
-
-#endif //#ifdef__AVR__
 
 // TODO not used at the moment
 float readSelfCalibratedAltitude() {
@@ -231,13 +201,7 @@ void pseudo_thread_main_check() {
 
 void loop() {
 
-	// 'hand query' the GPS, not suggested :( ///////// using InteruptTimer now (works with M0)
-	// if (! usingInterruptForGPS) {
-	// 	// read data from the GPS in the 'main loop'
-	// 	char c = GPS.read();
-	// 	if (DEBUG && DEBUG_GPS_RAW)
-	// 		if (c) Serial.print(c);
-	// }
+	// could 'hand query' GPS, not suggested -- using InteruptTimer now (works with M0)
 
 	/* Sample 9DOF and update internal orientation filter. */
 	// imu.sample();
@@ -264,9 +228,12 @@ void loop() {
 		lowBattery = measuredvbat < 3.4;  // 3.2V is when protection circuitry kicks in
 	}
 }
+
+
 /* Only queue/send the packet if not in the middle of transmitting. Returns immediately. */
 void transmitTelemIfRadioAvaliable() {
 	// if not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
+
 	if (rf95.mode() == RHGenericDriver::RHModeIdle) {
 		// TODO IF this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
 		if (DEBUG) Serial.println("START telemetry transmission."); // TODO test

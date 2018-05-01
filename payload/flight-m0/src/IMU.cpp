@@ -5,6 +5,7 @@
 #include <../lib/Adafruit_LSM9DS1/Adafruit_LSM9DS1.h>
 #include <Adafruit_Sensor.h>
 #include <Madgwick.h>
+#include <Mahony.h>
 
 #include "global.h"
 
@@ -20,22 +21,22 @@ class IMU {
 	/* Calibration values */
 
 	// Offsets applied to raw x/y/z mag values
-	const float magOffsets[3]            = { 0.93F, -7.47F, -35.23F };
+	const float magOffsets[3]            = { 66.2F, 4.45, -5.99F };
 
 	// Soft iron error compensation matrix
-	const float magSoftironMatrix[3][3] = { {  0.943,  0.011,  0.020 },
-	                                    {  0.022,  0.918, -0.008 },
-	                                    {  0.020, -0.008,  1.156 } };
+	const float magSoftironMatrix[3][3] = { {  1.028,  0.056,  0.202 },
+	                                    {  0.056,  0.910, 0.038 },
+	                                    {  0.202, 0.038,  1.1113 } };
 
-	const float magFieldStrength        = 50.23F;
+	const float magFieldStrength        = 52.85F;
 
 	// Offsets applied to compensate for gyro zero-drift error for x/y/z
 	const float gyroZeroOffsets[3]      = { 0.0F, 0.0F, 0.0F };
 
 
 public:
-	// Mahony filter; // lighter weight
-	Madgwick filter;
+	Mahony filter; // lighter weight
+	// Madgwick filter;
 
 	/** Starts the LSM device, if successful also sets sensor ranges. */
 	bool begin() {
@@ -90,7 +91,7 @@ public:
 	                mx, my, mz,
 					delta_IMU_time);
 
-		// 
+		//
 		// filter.updateIMU(gx, gy, gz,
 	    //             accel.acceleration.x, accel.acceleration.y, accel.acceleration.z,
 		// 			delta_IMU_time);

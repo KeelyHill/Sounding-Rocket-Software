@@ -1,6 +1,8 @@
 /**
 main.cpp
 
+Primary functions and entry point for flight computer.
+
 */
 
 
@@ -146,9 +148,14 @@ float readSelfCalibratedAltitude() {
 }
 
 
-uint32_t ptimer_10sec = millis(); // pseudo timer 'thread'
+uint32_t ptimer_35sec = millis(); // pseudo timer 'thread'
 uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next opportunity'
 
+/** Main Sensor Check 'pseudo thread'
+
+Checks for GPS NMEA, reads BMP, encodes packet,
+and queues new radio transmission if ready.
+*/
 void pseudo_thread_main_check() {
 	if (GPS.newNMEAreceived()) {
 		char * lastNMEA = GPS.lastNMEA();
@@ -213,14 +220,16 @@ void loop() {
 	// imu.debugPrint();
 	// imu.calibrationPrint();
 
+	/* call main check 'pseudo thread' */
 	if (millis() - ptimer_100ms > 100) { // every 100 millis (lazy execute)
 		ptimer_100ms = millis();
 
 		pseudo_thread_main_check();
 	}
 
-	if (millis() - ptimer_10sec > 10000) { // every 10 seconds
-		ptimer_10sec = millis();
+	/* Less important battery status */
+	if (millis() - ptimer_35sec > 35000) { // every 35 seconds
+		ptimer_35sec = millis();
 
 		float measuredvbat = analogRead(VBATPIN);
 		measuredvbat *= 6.6;    // divided by 2 * 3.3V, so multiply back and * reference voltage

@@ -41,7 +41,7 @@ main.cpp
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // Status bools
-bool bmp_okay, gps_okay;
+bool gps_okay, bmp_okay, imu_okay;
 bool radioInitSuccess;
 bool lowBattery = false;
 
@@ -120,17 +120,19 @@ void setup() {
 
 	/* Other sensor setup */
 
+	bmp_okay = bme.begin();
+	// while (!bme.begin()) {
+	// 	Serial.println("Could not find a valid BMP280 sensor, check wiring!");
+	// 	delay(300);
+  	// }
 
-	while (!bme.begin()) {
-		Serial.println("Could not find a valid BMP280 sensor, check wiring!");
-		delay(300);
-  	}
+	imu_okay = imu.begin();
+	// while(!imu.begin()) {
+	// 	Serial.println("No LSM9DS1 detected, check wiring!");
+	// 	delay(300);
+	// }
 
-	while(!imu.begin()) {
-		Serial.println("No LSM9DS1 detected ... Check your wiring!");
-		delay(300);
-	}
-
+	logger.begin(SS_SD);
 
 	Serial.println("Setup done.");
 }

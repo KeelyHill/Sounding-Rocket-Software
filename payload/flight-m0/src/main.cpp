@@ -143,16 +143,15 @@ float readSelfCalibratedAltitude() {
  	return bme.readAltitude(seaLevel_hP);
 }
 
+
 uint32_t ptimer_10sec = millis(); // pseudo timer 'thread'
-uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next oppertunity'
+uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next opportunity'
 
 void pseudo_thread_main_check() {
 	if (GPS.newNMEAreceived()) {
 		char * lastNMEA = GPS.lastNMEA();
 
-		// Serial.print("RAW:");
-		// Serial.println(lastNMEA);
-		// if ((lastNMEA[3] == 'G' && lastNMEA[4] == 'G' && lastNMEA[5] == 'A') || (lastNMEA[3] == 'R' && lastNMEA[4] == 'M' && lastNMEA[5] == 'C')) {
+		// Serial.print("RAW:");  Serial.println(lastNMEA);
 		if (lastNMEA[5] == 'G'|| lastNMEA[5] == 'M') {
 			bool parseOkay = GPS.parse(lastNMEA);  // this also sets the newNMEAreceived() flag to false
 
@@ -174,7 +173,7 @@ void pseudo_thread_main_check() {
 	coder.altimeter_alt = bme.readPressure() / 100; //TODO pressure for now, awaiting proper wiring for readSelfCalibratedAltitude();
 	ATOMIC_BLOCK_END;
 
-	generalDebugPrint();
+	// generalDebugPrint();
 
 
 	if (GPS.fix) {
@@ -194,7 +193,7 @@ void pseudo_thread_main_check() {
 
 	/* Log then Transmit if radio open */
 
-	// logger.log(bytes_to_send, &len_bytes_to_send);
+	logger.log(bytes_to_send, &len_bytes_to_send);
 
 	transmitTelemIfRadioAvaliable();
 }
@@ -232,11 +231,11 @@ void loop() {
 
 /* Only queue/send the packet if not in the middle of transmitting. Returns immediately. */
 void transmitTelemIfRadioAvaliable() {
-	// if not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
+	// this can be finicky when being called in rapid succession (especially with other SPI devices)
 
+	// if not transmitting (alt: rf95.mode() != RHGenericDriver::RHModeTX)
 	if (rf95.mode() == RHGenericDriver::RHModeIdle) {
-		// TODO IF this does not work (because waitPacketSent() is called by send()), use an interupt to create a pseudo-thread
-		if (DEBUG) Serial.println("START telemetry transmission."); // TODO test
+		if (DEBUG) Serial.println("START telemetry transmission.");
 
 		rf95.send(bytes_to_send, len_bytes_to_send);
 	}
@@ -245,7 +244,7 @@ void transmitTelemIfRadioAvaliable() {
 void pullSlavesHighAndInit() {
 
 	pinMode(RFM95_CS, OUTPUT);
-	digitalWrite(RFM95_CS, HIGH); // TODO test to ensure RadioHead pulls to low when trying to talk to the LoRa.
+	digitalWrite(RFM95_CS, HIGH);
 
 	pinMode(SS_BMP, OUTPUT);
 	digitalWrite(SS_BMP, HIGH);

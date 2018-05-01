@@ -2,13 +2,13 @@
 
 Usage:
 
-#include "InteruptTimer.hpp"
+	#include "InteruptTimer.hpp"
 
-startTimer(10); // 10 Hz
+	startTimer(10); // 10 Hz
 
-void interuptTimerCallback() {
-	// ..
-}
+	void interuptTimerCallback() {
+		// ...
+	}
 
 Adapted from: https://gist.github.com/jdneo/43be30d85080b175cb5aed3500d3f989
 */

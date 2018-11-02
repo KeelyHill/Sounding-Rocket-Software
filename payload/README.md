@@ -1,7 +1,7 @@
 
 # Payload and Telemetry Software
 
-The flight and ground computer is a M0 Feather with LoRa transceiver radio module. TODO more about the chip. The ground computer's only task is as a receiving interface to a laptop. It listens for data on the transmission frequency and forwards it over USB for final decoding, additional logging on disk, and live display.
+The flight and ground computer is a ARM Cortex M0 as an Adafruit Feather with LoRa transceiver radio module. The ground computer's only task is as a receiving interface to a laptop. It listens for data on the transmission frequency and forwards it over USB for final decoding, additional logging on disk, and live display.
 
 The flight computer is responsible for reading raw data from all on board sensors, encoding telemetry packets  into a byte array, and transmitting this packet via the LoRa radio.
 
@@ -23,7 +23,7 @@ A list is located `Coder.cpp` and `decode.py`.
 - `M0 LoRa Send Recive test/`: Contains code for testing the sender and receiver (notably range).
 
 ## Ground forwarder USB protocol
-The ground reciver forwards recived packets over USB-serial. Because our telemetry packet size is fixed length, no extra length header is needed. By default, the microcontroller reboots (TODO test this for the FeatherM0) so no synchronizing is needed. The first 4 bytes are signal strength (RSSI) and signal-to-noise ratio (SNR), followed by fixed length raw telemetry data (`serial_read_length = raw_telemetry_length + 4`).
+The ground receiver forwards received packets over USB-serial. Because our telemetry packet size is fixed length, no extra length header is needed. By default, the microcontroller reboots (TODO test this for the FeatherM0) so no synchronizing is needed. The first 4 bytes are signal strength (RSSI) and signal-to-noise ratio (SNR), followed by fixed length raw telemetry data (`serial_read_length = raw_telemetry_length + 4`).
 
 `[2 bytes RSSI][2 bytes SNR][telem-packet-len: raw data]`
 
@@ -36,7 +36,7 @@ The ground reciver forwards recived packets over USB-serial. Because our telemet
 - Ensure the status led is not rapidly blinking (several times a second).
 - Check for good reception and statuses in ground program.
 
-# Building
+## Building
 (Assumes PlatformIO is installed on the system. See Makefile for details.)
 
 **Flight M0:**  
@@ -49,3 +49,9 @@ The ground reciver forwards recived packets over USB-serial. Because our telemet
 
 **Ground Client (Python)**  
 `$ make ground-client`
+
+## Peripheral devices
+- Barometric Pressure Sensor (BPM)  [SPI]
+- 9 DOF IMU  [I2C]
+- GPS  [Serial]
+- SD Reader [SPI]

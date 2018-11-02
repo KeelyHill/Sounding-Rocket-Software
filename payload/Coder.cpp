@@ -34,7 +34,6 @@ f altimeter altitude
 B gps_hour
 B gps_min
 B gps_sec
-~~H gps_millis~~
 f latitude
 f longitude
 f altitude (meters)
@@ -63,7 +62,8 @@ bit(from lsb) | name
 #ifndef CODER_CPP
 #define CODER_CPP
 
-#define TELEM_PACKET_SIZE 35 // bytes TODO recalc to check add 1 if doing checksum 63
+// bytes TODO recalc to check add 1 if doing checksum 63
+#define TELEM_PACKET_SIZE 35
 
 #define BIT(x) (0x01 << (x))
 #define bit_write(cond,var,b) (cond ? (var) |= (b) : (var) &= ~(b)) // bit_write(bool, variable, BIT(b))
@@ -141,7 +141,6 @@ public:
 	uint32_t arduino_millis;
 	float altimeter_alt;
 	uint8_t gps_hour, gps_min, gps_sec;
-	// uint16_t gps_millis;
 	float latitude, longitude, altitude;
 	float gps_speed;
 	uint8_t num_sats;

@@ -39,6 +39,8 @@ The ground receiver forwards received packets over USB-serial. Because our telem
 ## Building
 (Assumes PlatformIO is installed on the system. See Makefile for details.)
 
+**See: `flight-m0/src/global.h` For broad configuration and to enable/disable sensors,**
+
 **Flight M0:**  
 `$ make flight` or  
 `$ make flight-upload`

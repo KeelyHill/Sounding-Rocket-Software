@@ -18,7 +18,7 @@ Adapted from: https://gist.github.com/jdneo/43be30d85080b175cb5aed3500d3f989
 #define CPU_HZ 48000000
 #define TIMER_PRESCALER_DIV 1024
 
-void startTimer(int frequencyHz);
+void startInteruptTimer(int frequencyHz);
 void setTimerFrequency(int frequencyHz);
 void TC3_Handler();
 
@@ -36,7 +36,7 @@ void setTimerFrequency(int frequencyHz) {
 	while (TC->STATUS.bit.SYNCBUSY == 1);
 }
 
-void startTimer(int frequencyHz) {
+void startInteruptTimer(int frequencyHz) {
 	REG_GCLK_CLKCTRL = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3) ;
 	while ( GCLK->STATUS.bit.SYNCBUSY == 1 ); // wait for sync
 

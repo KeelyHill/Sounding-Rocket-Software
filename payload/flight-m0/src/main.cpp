@@ -3,6 +3,15 @@ main.cpp
 
 Primary functions and entry point for flight computer.
 
+Some notes on the structure of this program:
+- The main `loop` acts kind of like a scheduler (called as fast as processor can go).
+- A 'pseudo thread' gets triggered by simply checking if some about of time has passed.
+	- "execute on next opportunity"
+- Not hard real-time, but fast enough. (not a critial system)
+	- `pseudo_thread_main_check` is where the sensor reading and telemetry TX happens
+- GPS data is read over the serial pins via InteruptTimer (`interuptTimerCallback`)
+	- checked via `GPS.newNMEAreceived()` in the main pseudo thread
+
 */
 
 
@@ -68,7 +77,7 @@ void generalDebugPrint();
 
 // For constant reading of GPS serial data (as recommended)
 void interuptTimerCallback() {
-	GPS.read(); //char c = GPS.read();
+	GPS.read(); //char c = GPS.read(); one byte of GPS NMEA
 }
 
 
@@ -86,12 +95,7 @@ void statusLEDUpdate() {
 
 void setup() {
 
-	// if (DEBUG) {
-	// 	while (!Serial);
-	// 	Serial.begin(115200);
-	// 	delay(100);
-	// }
-
+	// Simple visual indicator of failure
 	pinMode(STATUS_LED, OUTPUT);
 	digitalWrite(STATUS_LED, HIGH); // on if failed to init
 
@@ -99,7 +103,7 @@ void setup() {
 
 	pullSlavesHighAndInit();
 
-	// radio setup and init
+	/* Radio set up and init */
 
 	commonRadioSetup();
 	radioInitSuccess = radioInit(rf95);
@@ -114,25 +118,29 @@ void setup() {
 	GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA); // turn on RMC (recommended minimum) and GGA (fix data) including altitude
 	// GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
 	GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);   // 1 Hz update rate, 5 and 10 available
-	// Request updates on antenna status, comment out to keep quiet
+	// Request updates on antenna status, comment out to silence
 	// GPS.sendCommand(PGCMD_ANTENNA);
 
 	// starts GPS serial read interupt timer
-	startTimer(1000);  // 1000 Hz
+	startInteruptTimer(1000);  // 1000 Hz
 
 	/* Other sensor setup */
 
+	#if ENABLE_BMP // if .begin() is not called, other calls are just dummy
 	bmp_okay = bme.begin();
 	// while (!bme.begin()) {
 	// 	Serial.println("Could not find a valid BMP280 sensor, check wiring!");
 	// 	delay(300);
   	// }
+	#endif
 
+	#if ENABLE_IMU // if .begin() is not called, other calls are just dummy
 	imu_okay = imu.begin();
 	// while(!imu.begin()) {
 	// 	Serial.println("No LSM9DS1 detected, check wiring!");
 	// 	delay(300);
 	// }
+	#endif
 
 	logger.begin(SS_SD);
 
@@ -148,8 +156,9 @@ float readSelfCalibratedAltitude() {
 }
 
 
-uint32_t ptimer_35sec = millis(); // pseudo timer 'thread'
-uint32_t ptimer_100ms = millis(); // pseudo timer 'thread', 'execute on next opportunity'
+/* pseudo thread timers (to execute on next opportunity) */
+uint32_t ptimer_100ms = millis(); // for main thread
+uint32_t ptimer_35sec = millis();
 
 /** Main Sensor Check 'pseudo thread'
 
@@ -178,9 +187,13 @@ void pseudo_thread_main_check() {
 	coder.arduino_millis = millis();
 	coder.setStateFlags(bmp_okay, logger.sdOkay, gps_okay, (bool &)GPS.fix);
 
+	#if ENABLE_BMP
 	ATOMIC_BLOCK_START; // needed for some reason, readPressure /sometimes/ freezes system when radio is doing stuff
 	coder.altimeter_alt = bme.readPressure() / 100; //TODO pressure for now, awaiting proper wiring for readSelfCalibratedAltitude();
 	ATOMIC_BLOCK_END;
+	#else
+	coder.altimeter_alt = 0;
+	#endif
 
 	// generalDebugPrint();
 
@@ -207,10 +220,12 @@ void pseudo_thread_main_check() {
 	transmitTelemIfRadioAvaliable();
 }
 
+
 void loop() {
 
-	// could 'hand query' GPS, not suggested -- using InteruptTimer now (works with M0)
+	// could 'hand query' GPS here, not suggested -- using InteruptTimer now (works with M0)
 
+	#if ENABLE_IMU
 	/* Sample 9DOF and update internal orientation filter. */
 	// imu.sample();
 	// float roll = imu.filter.getRoll();
@@ -219,6 +234,7 @@ void loop() {
 
 	// imu.debugPrint();
 	// imu.calibrationPrint();
+	#endif//ENABLE_IMU
 
 	/* call main check 'pseudo thread' */
 	if (millis() - ptimer_100ms > 100) { // every 100 millis (lazy execute)
@@ -227,7 +243,7 @@ void loop() {
 		pseudo_thread_main_check();
 	}
 
-	/* Less important battery status */
+	/* battery status (less important) */
 	if (millis() - ptimer_35sec > 35000) { // every 35 seconds
 		ptimer_35sec = millis();
 
@@ -240,7 +256,10 @@ void loop() {
 }
 
 
-/* Only queue/send the packet if not in the middle of transmitting. Returns immediately. */
+/**
+Only queues/sends the packet if not in the middle of transmitting.
+Returns immediately. Done like this to easily prevent blocking.
+*/
 void transmitTelemIfRadioAvaliable() {
 	// this can be finicky when being called in rapid succession (especially with other SPI devices)
 
@@ -266,7 +285,7 @@ void pullSlavesHighAndInit() {
 	delay(1);
 }
 
-/* For debug prints of sensors. */
+/** For debug prints of sensors. */
 void generalDebugPrint() {
 	if (DEBUG) {
 		Serial.print("Pressure (hP):");

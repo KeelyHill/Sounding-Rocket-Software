@@ -31,7 +31,6 @@ int test_coder_types() {
 	c.gps_hour = 12;
 	c.gps_min = 23;
 	c.gps_sec = 45;
-	c.gps_millis = 42;
 
 	c.latitude = 1.1;
 	c.longitude = 2.2;
